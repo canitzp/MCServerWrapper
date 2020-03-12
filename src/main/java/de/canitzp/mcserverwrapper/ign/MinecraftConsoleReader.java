@@ -48,10 +48,14 @@ public class MinecraftConsoleReader{
             if(split.length == 2){
                 String caller = split[0].substring(1, split[0].length() - 1);
                 String message = split[1];
-                if(message.startsWith(this.wrapper.getSettings().getString("general.wrapper_command_prefix"))){
-                    Optional<User> user = this.activeUser.stream().filter(u -> caller.equals(u.getName())).findFirst();
-                    user.ifPresent(user1 -> this.wrapper.getCommandHandler().scheduleCommand(user1, message));
+                User user = this.activeUser.stream().filter(u -> caller.equals(u.getName())).findFirst().orElse(null);
+                if(user == null && caller.equals("Server")){
+                    user = User.CONSOLE;
                 }
+                if(message.startsWith(this.wrapper.getSettings().getString("general.wrapper_command_prefix"))){
+                    this.wrapper.getCommandHandler().scheduleCommand(user, message);
+                }
+                this.wrapper.getPluginManager().onChatMessage(user, message);
             }
         } else if(pureLine.matches(".*\\sjoined\\sthe\\sgame")){
             String playerName = pureLine.substring(0, pureLine.indexOf(" "));

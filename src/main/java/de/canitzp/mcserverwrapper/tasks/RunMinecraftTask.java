@@ -40,8 +40,6 @@ public class RunMinecraftTask implements Runnable{
         
         this.isRunning.set(true);
         
-        
-    
         try {
             List<String> command = new ArrayList<>();
             command.add(this.wrapper.getSettings().getString("general.java_path"));

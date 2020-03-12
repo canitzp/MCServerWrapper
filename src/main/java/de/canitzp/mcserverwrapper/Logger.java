@@ -1,9 +1,7 @@
 package de.canitzp.mcserverwrapper;
 
-import java.util.ArrayDeque;
-import java.util.Arrays;
-import java.util.Deque;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class Logger{
     
@@ -32,10 +30,12 @@ public class Logger{
     public void log(String caller, String msg, ANSICOLOR... formatting){
         StringBuilder coloring = new StringBuilder();
         Arrays.stream(formatting).forEach(ansicolor -> coloring.append(ansicolor.controlCode));
+        
+        String date = new SimpleDateFormat("dd.MMM.yyyy, HH:mm:ss").format(new Date());
     
         String finalMessage;
         if(caller != null){
-            finalMessage = String.format("%s[%s]: %s%s", coloring.toString(), caller, msg, ANSICOLOR.RESET.controlCode);
+            finalMessage = String.format("%s[%s] [%s]: %s%s", coloring.toString(), date, caller, msg, ANSICOLOR.RESET.controlCode);
         } else {
             finalMessage = String.format("%s%s%s", coloring.toString(), msg, ANSICOLOR.RESET.controlCode);
         }

@@ -3,6 +3,7 @@ package de.canitzp.mcserverwrapper;
 import de.canitzp.mcserverwrapper.commands.CommandHandler;
 import de.canitzp.mcserverwrapper.ign.MinecraftConsoleReader;
 import de.canitzp.mcserverwrapper.ign.UserManagement;
+import de.canitzp.mcserverwrapper.plugins.PluginManager;
 import de.canitzp.mcserverwrapper.tasks.ConsoleInterpreter;
 import de.canitzp.mcserverwrapper.tasks.BackupManager;
 import de.canitzp.mcserverwrapper.tasks.RunMinecraftTask;
@@ -35,6 +36,7 @@ public class MCServerWrapper{
     private final CommandHandler commandHandler = new CommandHandler(this);
     private final MinecraftConsoleReader minecraftConsoleReader = new MinecraftConsoleReader(this);
     private final UserManagement userManagement = new UserManagement(this);
+    private final PluginManager pluginManager = new PluginManager(this);
     
     private Settings settings;
     
@@ -49,11 +51,15 @@ public class MCServerWrapper{
                 this.RUN_MC_TASK.sendToConsole("stop");
             }
             this.CONSOLE_INTERPRETER.stop();
+            this.pluginManager.stop();
             this.getLog().info(LOG_NAME, "Shutting down.");
         }));
         
         // Start the console interpreter. Bridge from System.in to server console or wrapper command
         Executors.newSingleThreadExecutor().submit(this.CONSOLE_INTERPRETER);
+        
+        // Start the plugin manager and all plugins
+        Executors.newSingleThreadExecutor().submit(this.pluginManager);
         
         // Start the backup manager
         Executors.newSingleThreadExecutor().submit(this.BACKUP_MANAGER);
@@ -80,6 +86,7 @@ public class MCServerWrapper{
         boolean killAfterConfigCreation = !this.configFile.toFile().exists();
         this.settings = new Settings(this.configFile.toFile());
         this.getMinecraftConsoleReader().onConfigurationChange();
+        this.pluginManager.reload();
         if(overwrite){
             this.settings.overwriteCurrentConfig(); // to overwrite the old or non existent configuration file.
         }
@@ -87,7 +94,7 @@ public class MCServerWrapper{
             this.getLog().info(LOG_NAME, "There was no conf file found, so it is created. Please check it before running this application again! The name is: '" + this.configFile.getFileName() + "'");
             System.exit(0);
         }
-        this.getLog().info(LOG_NAME, "Settings loaded successful.");
+        this.getLog().info(LOG_NAME, "Resource loading successful.");
     }
     
     // main thread loop until all thread have finished and the application can be exited
@@ -267,6 +274,10 @@ public class MCServerWrapper{
     
     public Logger getLog(){
         return LOGGER;
+    }
+    
+    public PluginManager getPluginManager(){
+        return pluginManager;
     }
     
     public void setLock(boolean locked){
