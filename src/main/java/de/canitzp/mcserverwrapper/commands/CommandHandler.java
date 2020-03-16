@@ -22,6 +22,7 @@ public class CommandHandler{
         this.wrapper = wrapper;
         this.registerCommand(new BackupCommand());
         this.registerCommand(new HelpCommand());
+        this.registerCommand(new PluginCommand());
         this.registerCommand(new ReloadCommand());
         this.registerCommand(new StartServerCommand());
         this.registerCommand(new StopServerCommand());
@@ -66,7 +67,13 @@ public class CommandHandler{
                         e.printStackTrace();
                     }
                     CommandLine finalCmd = cmd;
-                    this.wrapper.submitRunnable(() -> c.get().execute(this.wrapper, User.CONSOLE, finalCmd));
+                    this.wrapper.submitRunnable(() -> {
+                        try{
+                            c.get().execute(this.wrapper, User.CONSOLE, finalCmd);
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
+                    });
                 } else {
                     // todo can't run this command
                 }

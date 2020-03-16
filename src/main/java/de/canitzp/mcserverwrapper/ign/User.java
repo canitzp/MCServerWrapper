@@ -48,10 +48,6 @@ public class User{
         return expiresOn;
     }
     
-    public void tellUser(String message){
-    
-    }
-    
     public static List<User> readUserFromSystem(File usercache, File ops){
         List<User> list = new ArrayList<>();
     

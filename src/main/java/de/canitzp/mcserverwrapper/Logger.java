@@ -40,13 +40,17 @@ public class Logger{
             finalMessage = String.format("%s%s%s", coloring.toString(), msg, ANSICOLOR.RESET.controlCode);
         }
         
+        /*
         if(!this.disableMultilineCheck && !this.lines.isEmpty() && finalMessage.equals(this.lines.getLast())){
             this.reprintLastLine();
         } else {
             this.multipleEntryIndexNumber = 0;
             this.lines.addLast(finalMessage);
             System.out.println(finalMessage);
-        }
+        }*/
+    
+        this.lines.addLast(finalMessage);
+        System.out.println(finalMessage);
     }
     
     private void reprintLastLine(){

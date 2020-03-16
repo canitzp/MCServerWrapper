@@ -72,6 +72,7 @@ public class RunMinecraftTask implements Runnable{
             BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
             String line;
             while(p.isAlive()) {
+                this.wrapper.sleep(1);
                 while((line = in.readLine()) != null) {
                     //this.wrapper.getLog().info(LOG_NAME, line);
                     this.wrapper.getMinecraftConsoleReader().scheduleLine(line);

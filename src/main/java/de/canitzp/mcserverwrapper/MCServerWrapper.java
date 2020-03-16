@@ -3,12 +3,14 @@ package de.canitzp.mcserverwrapper;
 import de.canitzp.mcserverwrapper.commands.CommandHandler;
 import de.canitzp.mcserverwrapper.ign.MinecraftConsoleReader;
 import de.canitzp.mcserverwrapper.ign.UserManagement;
+import de.canitzp.mcserverwrapper.ign.save.RegionLoader;
 import de.canitzp.mcserverwrapper.plugins.PluginManager;
 import de.canitzp.mcserverwrapper.tasks.ConsoleInterpreter;
 import de.canitzp.mcserverwrapper.tasks.BackupManager;
 import de.canitzp.mcserverwrapper.tasks.RunMinecraftTask;
 import de.canitzp.mcserverwrapper.tasks.RunMinecraftUpdate;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -41,6 +43,10 @@ public class MCServerWrapper{
     private Settings settings;
     
     public MCServerWrapper(boolean startInLockedMode){
+        
+        //new RegionLoader(new File("./server/world")).loadRegionFiles("");
+        
+        //System.exit(0);
         /*
         * Important configuration reading and writhing!
         */
@@ -76,7 +82,11 @@ public class MCServerWrapper{
     
         while(this.LOCK_APPLICATION.get() || THREADS.getActiveCount() != 0) {
             sleep(250L);
-            this.tick();
+            try{
+                this.tick();
+            }catch(Exception e){
+                e.printStackTrace();
+            }
         }
         
         System.exit(0);
