@@ -56,14 +56,13 @@ public class BackupManager implements Runnable{
     @Override
     public void run(){
         while(this.run.get()){
-            this.wrapper.sleep(1000);
+            this.wrapper.sleep(10000);
             
             if(!this.scheduledBackup.isEmpty()){
-                this.backupInProgress.set(true);
+                this.backupInProgress.lazySet(true);
                 String backupName = this.scheduledBackup.removeFirst();
                 this.runBackup(backupName);
-            } else {
-                this.backupInProgress.set(false);
+                this.backupInProgress.lazySet(false);
             }
         }
     }
@@ -143,7 +142,7 @@ public class BackupManager implements Runnable{
     public boolean scheduleBackup(String backupName){
         try{
             this.scheduledBackup.addLast(backupName);
-            this.backupInProgress.set(true);
+            this.backupInProgress.lazySet(true);
             return true;
         } catch(IllegalStateException e){
             this.wrapper.getLog().error(LOG_NAME, "Couldn't schedule backup, since the queue is full!");

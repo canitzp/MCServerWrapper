@@ -41,7 +41,7 @@ public class RunMinecraftUpdate implements Runnable{
     
     @Override
     public void run(){
-        this.isRunning.set(true);
+        this.isRunning.lazySet(true);
         File jarFile = new File(this.wrapper.getSettings().getString("general.jar_path"));
         this.wrapper.getLog().info(LOG_NAME, "Checking for Updates.");
         
@@ -59,7 +59,7 @@ public class RunMinecraftUpdate implements Runnable{
                     }
                 }else{
                     this.wrapper.getLog().error(LOG_NAME, "The specified 'keep_single_version' doesn't exists! Value: '" + versionToKeep + "'");
-                    this.isRunning.set(false);
+                    this.isRunning.lazySet(false);
                     return;
                 }
             }else{ // no specific version is set. Using the latest one
@@ -107,7 +107,7 @@ public class RunMinecraftUpdate implements Runnable{
             this.wrapper.getLog().info(LOG_NAME, "No updates available.");
         }
         
-        this.isRunning.set(false);
+        this.isRunning.lazySet(false);
     }
     
     private String createSha1(File file) {

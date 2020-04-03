@@ -16,9 +16,9 @@ public class Settings{
     private final Config config;
     private final File configFile;
     
-    public Settings(File configFile){
+    public Settings(File configFile, String defaultConfigPath){
         this.configFile = configFile;
-        this.config = ConfigFactory.parseFile(configFile).withFallback(ConfigFactory.parseResources("wrapper-settings.default.conf"));
+        this.config = ConfigFactory.parseFile(configFile).withFallback(ConfigFactory.parseResources(defaultConfigPath));
     }
     
     public void overwriteCurrentConfig(){

@@ -43,7 +43,7 @@ public class MinecraftConsoleReader{
     private void interpretLine(String pureLine){
         this.wrapper.getLog().info("Minecraft", pureLine);
 
-        if(pureLine.matches("\\[.*]\\s.*")){
+        if(pureLine.matches("(\\[.*\\]|<.*>)\\s.*")){
             String[] split = pureLine.split("\\s", 2);
             if(split.length == 2){
                 String caller = split[0].substring(1, split[0].length() - 1);
@@ -61,11 +61,17 @@ public class MinecraftConsoleReader{
             String playerName = pureLine.substring(0, pureLine.indexOf(" "));
             List<User> allUser = User.readUserFromSystem(this.usercache, this.ops);
             Optional<User> user = allUser.stream().filter(u -> playerName.equals(u.getName())).findFirst();
-            user.ifPresent(user1 -> this.activeUser.add(user1));
+            user.ifPresent(user1 -> {
+                this.activeUser.add(user1);
+                this.wrapper.getPluginManager().onPlayerJoin(user1);
+            });
         } else if(pureLine.matches(".*\\sleft\\sthe\\sgame")){
             String playerName = pureLine.substring(0, pureLine.indexOf(" "));
             Optional<User> user = this.activeUser.stream().filter(u -> playerName.equals(u.getName())).findFirst();
-            user.ifPresent(user1 -> this.activeUser.remove(user1));
+            user.ifPresent(user1 -> {
+                this.activeUser.remove(user1);
+                this.wrapper.getPluginManager().onPlayerLeave(user1);
+            });
         }
     }
     

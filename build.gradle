@@ -17,7 +17,8 @@ dependencies {
     compile group: 'commons-io', name: 'commons-io', version: '2.6'
     compile 'com.typesafe:config:1.4.0'
     compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
-    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '3.0.2', ext: 'pom'
+    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '3.0.2'
+    compile group: 'com.discord4j', name: 'discord4j-core', version: '3.0.13'
 }
 
 jar {

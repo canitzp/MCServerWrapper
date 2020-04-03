@@ -22,8 +22,7 @@ public class MCServerWrapper{
     
     private static final String LOG_NAME = "Main";
     
-    private final Deque<String> commandsToProcess = new ArrayDeque<>();
-    private final List<String> LOG_LINES = new ArrayList<>();
+    //private final List<String> LOG_LINES = new ArrayList<>();
     private final Path configFile = Paths.get("./wrapper-settings.conf");
     private final AtomicBoolean LOCK_APPLICATION = new AtomicBoolean(false);
     
@@ -76,11 +75,12 @@ public class MCServerWrapper{
     
             this.startMinecraftServer();
         } else {
-            this.LOCK_APPLICATION.set(true);
+            this.LOCK_APPLICATION.lazySet(true);
             this.getLog().info(LOG_NAME, "Application started in LOCKED mode.");
         }
     
         while(this.LOCK_APPLICATION.get() || THREADS.getActiveCount() != 0) {
+            //System.gc();
             sleep(250L);
             try{
                 this.tick();
@@ -94,9 +94,9 @@ public class MCServerWrapper{
     
     public void loadConfiguration(boolean overwrite){
         boolean killAfterConfigCreation = !this.configFile.toFile().exists();
-        this.settings = new Settings(this.configFile.toFile());
+        this.settings = new Settings(this.configFile.toFile(), "wrapper-settings.default.conf");
         this.getMinecraftConsoleReader().onConfigurationChange();
-        this.pluginManager.reload();
+        this.pluginManager.reload(overwrite);
         if(overwrite){
             this.settings.overwriteCurrentConfig(); // to overwrite the old or non existent configuration file.
         }
@@ -125,99 +125,6 @@ public class MCServerWrapper{
         }
         
         this.commandHandler.tick();
-        
-        // process command inputs
-        if(!this.commandsToProcess.isEmpty()){
-            this.processCommand(this.commandsToProcess.getFirst());
-            this.commandsToProcess.removeFirst();
-        }
-    }
-    
-    private void processCommand(String command){
-        String wrapperCommandPrefix = this.getSettings().getString("general.wrapper_command_prefix");
-        if(command.startsWith(wrapperCommandPrefix)){
-            command = command.substring(wrapperCommandPrefix.length());
-        }
-        
-        switch(command){
-            case "start": {
-                this.LOCK_APPLICATION.set(false);
-                this.startMinecraftServer();
-                break;
-            }
-            case "stop": {
-                if(this.LOCK_APPLICATION.get()){
-                    this.LOCK_APPLICATION.set(false);
-                } else {
-                    this.LOCK_APPLICATION.set(true);
-                    this.RUN_MC_TASK.stopServer();
-                    this.getLog().info(LOG_NAME, "Server stopped. LOCKED MODE. The wrapper command prefix is optional in this mode. Type 'stop' to close this wrapper or use 'start' to start the server.", Logger.ANSICOLOR.GREEN);
-                }
-                break;
-            }
-            case "backup": {
-                this.getLog().info(LOG_NAME, "Live backup started.");
-                if(this.BACKUP_MANAGER.scheduleBackup("manual")){
-                    this.BACKUP_MANAGER.waitForBackupFree();
-                    this.getLog().info(LOG_NAME, "Backup done.");
-                } else {
-                    this.getLog().error(LOG_NAME, "Backup hasn't finished!");
-                }
-                break;
-            }
-            case "backup --stop": {
-                if(this.RUN_MC_TASK.stopServer()){
-                    this.getLog().info(LOG_NAME, "Server stopped. Starting backup.");
-                    if(this.BACKUP_MANAGER.scheduleBackup("manual")){
-                        this.BACKUP_MANAGER.waitForBackupFree();
-                        this.getLog().info(LOG_NAME, "Backup done.");
-                        this.startMinecraftServer();
-                    } else {
-                        this.getLog().error(LOG_NAME, "Backup hasn't finished!");
-                    }
-                }
-                break;
-            }
-            case "reload": {
-                this.loadConfiguration(false);
-                break;
-            }
-            case "update": {
-                boolean wasRunning = this.RUN_MC_TASK.isRunning();
-                this.startMinecraftUpdate();
-                this.waitForUpdate();
-                if(wasRunning) {
-                    this.startMinecraftServer();
-                }
-                break;
-            }
-            case "restart": {
-                this.getLog().info(LOG_NAME, "Minecraft server restart scheduled.");
-                if(this.RUN_MC_TASK.sendToConsole("stop")){
-                    while(this.RUN_MC_TASK.isRunning()){
-                        sleep(100);
-                    }
-                    this.startMinecraftServer();
-                } else {
-                    this.getLog().error(LOG_NAME, "The server couldn't be restarted. Is it even running? Use the 'start' command if it isn't!");
-                }
-                break;
-            }
-            case "help": default: {
-                List<String> helpList = new ArrayList<>();
-                helpList.add("Prefix for wrapper command: '" + wrapperCommandPrefix + "' (Not needed when LOCKED mode is active. Currently LOCKED: '" + this.LOCK_APPLICATION.get() + "')");
-                helpList.add("Minecraft Server Wrapper Help:");
-                helpList.add("\t'backup [--stop]': Manual backup of all server files. Use --stop to stop the server before backup");
-                helpList.add("\t'help': Display this help");
-                helpList.add("\t'reload': Reloads the configuration file for the wrapper");
-                helpList.add("\t'restart': Restarts the server gracefully");
-                helpList.add("\t'start': Start the server is it isn't.");
-                helpList.add("\t'stop': Stops the server, BUT keeps the wrapper running, instead of stopping it too. Run again to stop the wrapper too, or 'start' to start the server.");
-                helpList.add("\t'update': Updates the server if available");
-                this.getLog().list(null, helpList, Logger.ANSICOLOR.GREEN);
-                break;
-            }
-        }
     }
     
     public void submitRunnable(Runnable runnable){
@@ -263,7 +170,7 @@ public class MCServerWrapper{
         } else {
             log = String.format("%s", message);
         }
-        LOG_LINES.add(log);
+        //LOG_LINES.add(log);
         System.out.println(log);
     }
     
@@ -291,7 +198,7 @@ public class MCServerWrapper{
     }
     
     public void setLock(boolean locked){
-        this.LOCK_APPLICATION.set(locked);
+        this.LOCK_APPLICATION.lazySet(locked);
     }
     
     public boolean isLockMode(){

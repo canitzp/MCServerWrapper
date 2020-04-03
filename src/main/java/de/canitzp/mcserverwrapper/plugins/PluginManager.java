@@ -1,17 +1,16 @@
 package de.canitzp.mcserverwrapper.plugins;
 
 import de.canitzp.mcserverwrapper.MCServerWrapper;
+import de.canitzp.mcserverwrapper.Settings;
 import de.canitzp.mcserverwrapper.ign.User;
-import groovy.lang.Binding;
-import groovy.lang.GroovyShell;
-import groovy.lang.MissingMethodException;
-import groovy.lang.Script;
-import org.codehaus.groovy.runtime.InvokerInvocationException;
+import de.canitzp.mcserverwrapper.plugins.event.ChatEvent;
+import de.canitzp.mcserverwrapper.plugins.event.TickEvent;
+import de.canitzp.mcserverwrapper.plugins.internal.DiscordChatBridge;
 
 import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class PluginManager implements Runnable{
@@ -20,19 +19,43 @@ public class PluginManager implements Runnable{
     private static final int TICK_TIME = 1;//50;
     
     private final MCServerWrapper wrapper;
+    private Path pluginDirectory;
+    private Path pluginSettingsDirectory;
     
     private boolean shouldRun = true;
-    private final List<Plugin> plugins = new ArrayList<>();
+    private final List<DefaultPlugin> plugins = new ArrayList<>();
     
-    private final PluginCommunicator pluginCommunicator = new PluginCommunicator(this);
+    //private final PluginCommunicator pluginCommunicator = new PluginCommunicator(this);
     
     public PluginManager(MCServerWrapper wrapper){
         this.wrapper = wrapper;
     }
     
     // load/reload all plugins
-    public void reload(){
+    public void reload(boolean overwriteSettings){
+        this.pluginDirectory = Paths.get(wrapper.getSettings().getFile("general.jar_path").getParent(), "plugins");
+        this.pluginSettingsDirectory = Paths.get(pluginDirectory.toFile().getAbsolutePath(), "settings");
+        if(!this.pluginSettingsDirectory.toFile().exists()){
+            this.pluginSettingsDirectory.toFile().mkdirs();
+        }
+        
+        this.plugins.forEach(DefaultPlugin::stop);
         this.plugins.clear();
+        
+        if(this.wrapper.getSettings().getBoolean("internal_plugins.enable_discord_bridge")){
+            Settings settings = new Settings(new File(pluginSettingsDirectory.toFile(), "discord_bridge.conf"), "discord_bridge.default.conf");
+            if(overwriteSettings){
+                settings.overwriteCurrentConfig();
+            }
+            DiscordChatBridge dcb = new DiscordChatBridge();
+            dcb.setPluginSettings(settings);
+            dcb.setWrapper(this.wrapper);
+            this.plugins.add(dcb);
+        }
+        
+        this.plugins.forEach(DefaultPlugin::init);
+        
+        /*this.plugins.clear();
         File pluginRoot = new File(".", "plugins");
         if(!pluginRoot.exists()){
             pluginRoot.mkdirs();
@@ -46,8 +69,10 @@ public class PluginManager implements Runnable{
         for(File dir : pluginDirectories){
             loadPlugin(dir);
         }
+         */
     }
     
+    /*
     private void loadPlugin(File pluginDirecotry){
         File pluginMain = new File(pluginDirecotry, "main.groovy");
         if(!pluginMain.exists()){
@@ -80,13 +105,17 @@ public class PluginManager implements Runnable{
         });
     }
     
+     */
+    
     @Override
     public void run(){
         long nextTick = System.currentTimeMillis();
         while(this.shouldRun && !this.plugins.isEmpty()){
             if(nextTick <= System.currentTimeMillis()){
                 nextTick = System.currentTimeMillis() + (1000 / TICK_TIME);
-                // todo tick plugin
+                for(DefaultPlugin plugin : this.plugins){
+                    plugin.getEvent(TickEvent.class).ifPresent(TickEvent::tick);
+                }
             }
             long sleepTime = nextTick - System.currentTimeMillis();
             if(sleepTime > 0){
@@ -99,8 +128,10 @@ public class PluginManager implements Runnable{
     
     public void stop(){
         this.shouldRun = false;
+        this.plugins.forEach(DefaultPlugin::stop);
     }
     
+    /*
     private Object runScriptMethod(Script script, Binding binding, String name, Object args){
         try{
             if(binding != null){
@@ -116,7 +147,9 @@ public class PluginManager implements Runnable{
         }
     }
     
-    public List<Plugin> getPlugins(){
+     */
+    
+    public List<DefaultPlugin> getPlugins(){
         return plugins;
     }
     
@@ -124,14 +157,29 @@ public class PluginManager implements Runnable{
         return wrapper;
     }
     
+    /*
     public PluginCommunicator getPluginCommunicator(){
         return pluginCommunicator;
     }
     
+     */
+    
     public void onChatMessage(User user, String message){
-        this.plugins.forEach(plugin -> plugin.onChatMessage(this.pluginCommunicator, user, message));
+        //this.plugins.forEach(plugin -> plugin.onChatMessage(this.pluginCommunicator, user, message));
+        for(DefaultPlugin plugin : this.plugins){
+            plugin.getEvent(ChatEvent.class).ifPresent(chatEvent -> chatEvent.onChatMessage(user, message));
+        }
     }
     
+    public void onPlayerJoin(User user){
+    
+    }
+    
+    public void onPlayerLeave(User user){
+    
+    }
+    
+    /*
     public static class Plugin {
         private final MCServerWrapper wrapper;
         private String id;
@@ -190,4 +238,6 @@ public class PluginManager implements Runnable{
             this.runMethod("onChatMessage", com, user, message);
         }
     }
+    
+     */
 }

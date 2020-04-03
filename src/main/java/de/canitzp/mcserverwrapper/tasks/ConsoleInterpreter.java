@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -28,7 +29,7 @@ public class ConsoleInterpreter implements Runnable{
     @Override
     public void run(){
         String wrapperCommandPrefix = this.wrapper.getSettings().getString("general.wrapper_command_prefix");
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in))){
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))){
             String line;
             while(this.run.get()) {
                 this.wrapper.sleep(10);
@@ -68,7 +69,7 @@ public class ConsoleInterpreter implements Runnable{
     }
     
     public void stop(){
-        this.run.set(false);
+        this.run.lazySet(false);
     }
     
 }

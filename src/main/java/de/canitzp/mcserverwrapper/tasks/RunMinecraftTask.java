@@ -1,10 +1,11 @@
 package de.canitzp.mcserverwrapper.tasks;
 
-import de.canitzp.mcserverwrapper.Logger;
+import com.sun.management.OperatingSystemMXBean;
 import de.canitzp.mcserverwrapper.MCServerWrapper;
 
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -44,10 +45,18 @@ public class RunMinecraftTask implements Runnable{
             List<String> command = new ArrayList<>();
             command.add(this.wrapper.getSettings().getString("general.java_path"));
     
-            List<String> ignoredArgs = this.wrapper.getSettings().getList(String.class, "general.ignored_startup_parameter");
-            for(String inputArgument : ManagementFactory.getRuntimeMXBean().getInputArguments()){
-                if(ignoredArgs.stream().noneMatch(inputArgument::startsWith)){
-                    command.add(inputArgument);
+            int ram = this.wrapper.getSettings().getInt("general.minecraft_ram_maximum");
+            command.add("-Xmx" + ram + "M");
+            command.add("-Xms" + ram + "M");
+    
+            command.addAll(this.wrapper.getSettings().getList(String.class, "general.additional_vm_parameter"));
+    
+            if(this.wrapper.getSettings().getBoolean("general.pass_parameter")){
+                List<String> ignoredArgs = this.wrapper.getSettings().getList(String.class, "general.ignored_startup_parameter");
+                for(String inputArgument : ManagementFactory.getRuntimeMXBean().getInputArguments()){
+                    if(ignoredArgs.stream().noneMatch(inputArgument::startsWith)){
+                        command.add(inputArgument);
+                    }
                 }
             }
             
@@ -55,10 +64,15 @@ public class RunMinecraftTask implements Runnable{
             command.add(jarFile.getName());
             command.addAll(this.wrapper.getSettings().getList(String.class, "general.additional_startup_parameter"));
             
+            long systemRamBytes = ((OperatingSystemMXBean) ManagementFactory.getOperatingSystemMXBean()).getTotalPhysicalMemorySize();
+            long systemRamMegabytes = Math.round(systemRamBytes / 1000000F);
             List<String> lines = new ArrayList<>();
             lines.add("========== Starting Server ==========");
-            lines.add("Directory: '" + jarFile.getParentFile().getCanonicalPath() + File.separator + "'");
-            lines.add("Command:   '" + String.join(" ", command) + "'");
+            lines.add("Server file:   '" + jarFile.getName() + "'");
+            lines.add("Server Memory: '" + ram + "MB'");
+            lines.add("System Memory: '" + systemRamMegabytes + "MB' ('" + systemRamBytes + "Bytes')");
+            lines.add("Directory:     '" + jarFile.getParentFile().getCanonicalPath() + File.separator + "'");
+            lines.add("Command:       '" + String.join(" ", command) + "'");
             lines.add("=====================================");
             
             this.wrapper.getLog().list(LOG_NAME, lines);
@@ -69,16 +83,17 @@ public class RunMinecraftTask implements Runnable{
             this.processWriter.set(new PrintWriter(p.getOutputStream()));
             
             // redirect minecraft console to us
-            BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-            String line;
-            while(p.isAlive()) {
-                this.wrapper.sleep(1);
-                while((line = in.readLine()) != null) {
-                    //this.wrapper.getLog().info(LOG_NAME, line);
-                    this.wrapper.getMinecraftConsoleReader().scheduleLine(line);
+            try(InputStreamReader isr = new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8)){
+                try(BufferedReader br = new BufferedReader(isr)){
+                    String line;
+                    while(p.isAlive()) {
+                        this.wrapper.sleep(1);
+                        while((line = br.readLine()) != null) {
+                            this.wrapper.getMinecraftConsoleReader().scheduleLine(line);
+                        }
+                    }
                 }
             }
-            in.close();
             
             // close console writer after minecraft is closed
             this.processWriter.get().close();
@@ -88,10 +103,14 @@ public class RunMinecraftTask implements Runnable{
             if (p.exitValue() != 0) {
                 this.wrapper.getLog().error(LOG_NAME, "Minecraft server exited with an error! '" + p.exitValue() + "'");
                 // open error stream to get the exception and print it to logger
-                in = new BufferedReader(new InputStreamReader(p.getErrorStream()));
-                while((line = in.readLine()) != null) {
-                    this.wrapper.getLog().warn(LOG_NAME, line);
-                    // todo interpret commands from ingame
+                try(InputStreamReader isr = new InputStreamReader(p.getErrorStream(), StandardCharsets.UTF_8)){
+                    String line;
+                    try(BufferedReader br = new BufferedReader(isr)){
+                        while((line = br.readLine()) != null) {
+                            this.wrapper.getLog().warn(LOG_NAME, line);
+                            // todo interpret commands from ingame
+                        }
+                    }
                 }
             } else {
                 this.wrapper.getLog().info(LOG_NAME, "Minecraft server exited fine.");
