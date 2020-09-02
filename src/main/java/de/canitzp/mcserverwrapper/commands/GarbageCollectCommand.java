@@ -7,22 +7,22 @@ import org.apache.commons.cli.CommandLine;
 public class GarbageCollectCommand implements IWrapperCommand {
     
     @Override
-    public String[] triggerNames() {
+    public String[] triggerNames(){
         return new String[]{"gc"};
     }
     
     @Override
-    public String helpDescription() {
+    public String helpDescription(){
         return "Manual activation for a java garbage collect. This only applies to the wrapper not to the server!";
     }
     
     @Override
-    public User.UserLevel minUserLevel() {
+    public User.UserLevel minUserLevel(){
         return User.UserLevel.OWNER;
     }
     
     @Override
-    public boolean execute(MCServerWrapper wrapper, User user, CommandLine cmd) {
+    public boolean execute(MCServerWrapper wrapper, User user, CommandLine cmd){
         long freeMemoryBefore = Runtime.getRuntime().freeMemory();
         System.gc();
         long freeMemoryAfter = Runtime.getRuntime().freeMemory();

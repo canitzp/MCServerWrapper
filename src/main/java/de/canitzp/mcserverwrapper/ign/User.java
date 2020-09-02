@@ -1,6 +1,9 @@
 package de.canitzp.mcserverwrapper.ign;
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import de.canitzp.mcserverwrapper.MCServerWrapper;
 
 import java.io.File;
@@ -13,27 +16,26 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-public class User{
+public class User {
     
-    public static final User CONSOLE = new User(){
+    public static final User CONSOLE = new User() {
         @Override
-        public boolean tellUser(MCServerWrapper wrapper, String message) {
+        public boolean tellUser(MCServerWrapper wrapper, String message){
             wrapper.getLog().info("/tell", message);
             return true;
         }
     };
-    
-    static{
-        CONSOLE.uuid = new UUID(0, 0);
-        CONSOLE.name = "Server";
-        CONSOLE.level = UserLevel.OWNER;
-    }
-    
     private UUID uuid;
     private String name;
     private UserLevel level = UserLevel.NORMAL;
     private boolean bypassPlayerLimit = false;
     private Date expiresOn;
+
+    static{
+        CONSOLE.uuid = new UUID(0, 0);
+        CONSOLE.name = "Server";
+        CONSOLE.level = UserLevel.OWNER;
+    }
     
     public UUID getUuid(){
         return uuid;
@@ -61,7 +63,7 @@ public class User{
     
     public static List<User> readUserFromSystem(File usercache, File ops){
         List<User> list = new ArrayList<>();
-    
+        
         // parse usercache.json
         try(FileReader fr = new FileReader(usercache)){
             JsonElement root = JsonParser.parseReader(fr);
@@ -78,7 +80,7 @@ public class User{
                                 case "uuid":{
                                     try{
                                         user.uuid = UUID.fromString(((JsonObject) e).get("uuid").getAsString());
-                                    }catch(IllegalArgumentException ex){
+                                    } catch(IllegalArgumentException ex){
                                         ex.printStackTrace();
                                     }
                                     break;
@@ -86,7 +88,7 @@ public class User{
                                 case "expiresOn":{
                                     try{
                                         user.expiresOn = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss Z").parse(((JsonObject) e).get("expiresOn").getAsString()); // 2020-03-10 15:11:04 +0100
-                                    }catch(ParseException ex){
+                                    } catch(ParseException ex){
                                         ex.printStackTrace();
                                     }
                                     break;
@@ -97,10 +99,10 @@ public class User{
                     }
                 }
             }
-        }catch(IOException e){
+        } catch(IOException e){
             e.printStackTrace();
         }
-    
+        
         // parse ops.json
         try(FileReader fr = new FileReader(usercache)){
             JsonElement root = JsonParser.parseReader(fr);
@@ -120,21 +122,21 @@ public class User{
                                         }
                                     }
                                 }
-                            }catch(IllegalArgumentException ex){
+                            } catch(IllegalArgumentException ex){
                                 ex.printStackTrace();
                             }
                         }
                     }
                 }
             }
-        }catch(IOException e){
+        } catch(IOException e){
             e.printStackTrace();
         }
         
         return list;
     }
     
-    public enum UserLevel{
+    public enum UserLevel {
         NORMAL, // normal user
         MODERATOR, // edit blocks in spawn
         GAMEMASTER, // run level 1 & 2 commands

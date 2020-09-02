@@ -13,30 +13,18 @@ import java.net.URL;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class RunMinecraftUpdate implements Runnable{
+public class RunMinecraftUpdate implements Runnable {
     
     private static final String LOG_NAME = "Updater";
-    
-    private AtomicBoolean isRunning = new AtomicBoolean(false);
     private final MCServerWrapper wrapper;
+    private AtomicBoolean isRunning = new AtomicBoolean(false);
+    private long nextUpdateTime = 0;
     
     public RunMinecraftUpdate(MCServerWrapper wrapper){
         this.wrapper = wrapper;
-    }
-    
-    private long nextUpdateTime = 0;
-    public void tick(){
-        if(this.nextUpdateTime <= 0){
-            this.nextUpdateTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(this.wrapper.getSettings().getInt("update.check_delay"));
-        } else if(this.nextUpdateTime <= System.currentTimeMillis()) {
-            this.nextUpdateTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(this.wrapper.getSettings().getInt("update.check_delay"));
-            this.wrapper.startMinecraftUpdate();
-        }
     }
     
     @Override
@@ -57,12 +45,12 @@ public class RunMinecraftUpdate implements Runnable{
                     if(!currentVersionHash.equalsIgnoreCase(currentHash)){
                         updateVersion = versionToKeep; // update whenever the current installed version is different to the specified "keep" version
                     }
-                }else{
+                } else{
                     this.wrapper.getLog().error(LOG_NAME, "The specified 'keep_single_version' doesn't exists! Value: '" + versionToKeep + "'");
                     this.isRunning.lazySet(false);
                     return;
                 }
-            }else{ // no specific version is set. Using the latest one
+            } else{ // no specific version is set. Using the latest one
                 String versionString = this.getLatestVersionString(doSnapshotUpdates);
                 String currentVersionHash = this.getVersionSHA(versionString);
                 if(currentVersionHash != null){
@@ -71,7 +59,7 @@ public class RunMinecraftUpdate implements Runnable{
                     }
                 }
             }
-        } else {
+        } else{
             updateVersion = versionToKeep != null ? versionToKeep : this.getLatestVersionString(doSnapshotUpdates);
         }
         
@@ -84,10 +72,10 @@ public class RunMinecraftUpdate implements Runnable{
                 if(this.wrapper.getSettings().getBoolean("backup.backup_on_update")){
                     if(this.wrapper.BACKUP_MANAGER.scheduleBackup("update_to_" + updateVersion)){
                         this.wrapper.BACKUP_MANAGER.waitForBackupFree();
-                    } else {
+                    } else{
                         // todo abort update and restore
                     }
-                } else {
+                } else{
                     this.wrapper.getLog().info(LOG_NAME, "Suppressing backup due to configuration.");
                 }
                 
@@ -96,60 +84,69 @@ public class RunMinecraftUpdate implements Runnable{
                 try{
                     FileUtils.copyURLToFile(downloadURL, jarFile);
                     this.wrapper.getLog().info(LOG_NAME, "File downloaded successfully. Update done. Server is getting started.");
-                }catch(IOException e){
+                } catch(IOException e){
                     // todo abort update and restore
                     e.printStackTrace();
                 }
-            } else {
+            } else{
                 this.wrapper.getLog().error(LOG_NAME, "Server couldn't be stopped. Updated aborted.");
             }
-        } else {
+        } else{
             this.wrapper.getLog().info(LOG_NAME, "No updates available.");
         }
         
         this.isRunning.lazySet(false);
     }
     
-    private String createSha1(File file) {
-        try {
+    public void tick(){
+        if(this.nextUpdateTime <= 0){
+            this.nextUpdateTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(this.wrapper.getSettings().getInt("update.check_delay"));
+        } else if(this.nextUpdateTime <= System.currentTimeMillis()){
+            this.nextUpdateTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(this.wrapper.getSettings().getInt("update.check_delay"));
+            this.wrapper.startMinecraftUpdate();
+        }
+    }
+    
+    private String createSha1(File file){
+        try{
             MessageDigest digest = MessageDigest.getInstance("SHA-1");
             InputStream fis = new FileInputStream(file);
             int n = 0;
             byte[] buffer = new byte[8192];
             
-            while(n != -1) {
+            while(n != -1){
                 n = fis.read(buffer);
-                if (n > 0) {
+                if(n > 0){
                     digest.update(buffer, 0, n);
                 }
             }
             
             byte[] data = digest.digest();
             StringBuilder hexString = new StringBuilder();
-    
+            
             for(byte b : data){
                 String hex = Integer.toHexString(255 & b);
                 if(hex.length() == 1){
                     hexString.append('0');
                 }
-        
+                
                 hexString.append(hex);
             }
             
             return hexString.toString();
-        } catch (IOException | NoSuchAlgorithmException var12) {
+        } catch(IOException | NoSuchAlgorithmException var12){
             var12.printStackTrace();
             return null;
         }
     }
     
     private JsonObject getVersionManifest(){
-        try {
+        try{
             URL url = new URL("https://launchermeta.mojang.com/mc/game/version_manifest.json");
             return JsonParser.parseReader(new InputStreamReader(url.openStream())).getAsJsonObject();
-        }catch(UnknownHostException uhe){
+        } catch(UnknownHostException uhe){
             this.wrapper.getLog().error(LOG_NAME, "A internet connection could not be established.");
-        }catch(IOException e){
+        } catch(IOException e){
             e.printStackTrace();
         }
         return null;
@@ -172,7 +169,7 @@ public class RunMinecraftUpdate implements Runnable{
                     try{
                         URL versionUrl = new URL(entry.getAsJsonObject().get("url").getAsString());
                         return JsonParser.parseReader(new InputStreamReader(versionUrl.openStream())).getAsJsonObject();
-                    }catch(IOException e){
+                    } catch(IOException e){
                         e.printStackTrace();
                     }
                 }
@@ -190,7 +187,7 @@ public class RunMinecraftUpdate implements Runnable{
                 if(server.has("url")){
                     try{
                         return new URL(server.get("url").getAsString());
-                    }catch(MalformedURLException e){
+                    } catch(MalformedURLException e){
                         e.printStackTrace();
                     }
                 }

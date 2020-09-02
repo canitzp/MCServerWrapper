@@ -7,21 +7,19 @@ import de.canitzp.mcserverwrapper.plugins.DefaultPlugin;
 import de.canitzp.mcserverwrapper.plugins.event.ChatEvent;
 import de.canitzp.mcserverwrapper.plugins.event.PlayerEvents;
 import de.canitzp.mcserverwrapper.plugins.event.ServerEvents;
-import discord4j.core.DiscordClient;
+import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
+import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.lifecycle.ReadyEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.Embed;
-import discord4j.core.object.entity.Channel;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
-import discord4j.core.object.entity.MessageChannel;
-import discord4j.core.object.util.Snowflake;
+import discord4j.core.object.entity.channel.Channel;
+import discord4j.core.object.entity.channel.MessageChannel;
 import reactor.util.Logger;
 import reactor.util.Loggers;
 import reactor.util.annotation.Nullable;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -29,26 +27,26 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 
-public class DiscordChatBridge extends DefaultPlugin implements Runnable{
+public class DiscordChatBridge extends DefaultPlugin implements Runnable {
     
-    private AtomicReference<DiscordClient> discord = new AtomicReference<>();
+    private AtomicReference<GatewayDiscordClient> discord = new AtomicReference<>();
     private AtomicReference<String> lastMessage = new AtomicReference<>();
     
-    public DiscordChatBridge() {
+    public DiscordChatBridge(){
         super("discord_bridge", "Discord Chat Bridge", "1.0.0");
     }
     
     @Override
-    public void setWrapper(MCServerWrapper wrapper) {
+    public void setWrapper(MCServerWrapper wrapper){
         super.setWrapper(wrapper);
         Logger logger = new DiscordLoggerWrapper(wrapper);
         Loggers.useCustomLoggers(s -> logger);
     }
     
     @Override
-    protected void init() {
+    protected void init(){
         Executors.newSingleThreadExecutor().submit(this);
-    
+        
         List<Long> allowedChannel = this.pluginSettings.getList(Long.class, "general.channel_ids");
         
         this.registerEvent(new ServerEvents.Started(serverStartupTimeInMilliseconds -> {
@@ -122,15 +120,15 @@ public class DiscordChatBridge extends DefaultPlugin implements Runnable{
     }
     
     @Override
-    protected void stop() {
-        DiscordClient client = this.discord.get();
-        if(client != null && client.isConnected()){
+    protected void stop(){
+        GatewayDiscordClient client = this.discord.get();
+        if(client != null){
             this.discord.get().logout().block();
         }
     }
     
     @Override
-    public void run() {
+    public void run(){
         String token = this.pluginSettings.getString("general.client_token");
         if(token == null || token.isEmpty()){
             System.out.println("No discord token found");
@@ -142,39 +140,37 @@ public class DiscordChatBridge extends DefaultPlugin implements Runnable{
             return;
         }
         
-        DiscordClient client = new DiscordClientBuilder(token).build();
-        this.discord.lazySet(client);
-    
-        client.getEventDispatcher().on(ReadyEvent.class).subscribe(readyEvent -> {
-            System.out.println("Discord Bot logged in as " + readyEvent.getSelf().getUsername());
-        });
-        
-        client.getEventDispatcher().on(MessageCreateEvent.class).subscribe(event -> {
-            Message message = event.getMessage();
-            if(allowedChannel.contains(message.getChannelId().asLong())){
-                message.getAuthor().ifPresent(author -> {
-                    message.getContent().ifPresent(s -> {
+        DiscordClientBuilder.create(token).build().withGateway(client -> {
+            this.discord.lazySet(client);
+            client.getEventDispatcher().on(ReadyEvent.class).subscribe(readyEvent -> {
+                System.out.println("Discord Bot logged in as " + readyEvent.getSelf().getUsername());
+            });
+            
+            client.getEventDispatcher().on(MessageCreateEvent.class).subscribe(event -> {
+                Message message = event.getMessage();
+                if(allowedChannel.contains(message.getChannelId().asLong())){
+                    message.getAuthor().ifPresent(author -> {
+                        String s = message.getContent();
                         s = s.replace("\n", " ").replace("\r", "");
                         if(!author.isBot()){
                             if(s.startsWith("!")){
                                 this.interpretCommand(s.substring(1), message.getAuthorAsMember().block(), () -> message.getChannel().block());
-                            } else {
+                            } else{
                                 String msg = String.format("<%s> %s", author.getUsername(), s);
                                 lastMessage.lazySet(msg);
                                 this.wrapper.RUN_MC_TASK.sendToConsole("/say " + msg);
                             }
                         }
                     });
-                });
-            }
-        });
-    
-        client.login().block();
+                }
+            });
+            return client.onDisconnect();
+        }).block();
     }
     
     private void interpretCommand(String command, Member author, Supplier<MessageChannel> channelSupplier){
-        switch(command) {
-            case "list": {
+        switch(command){
+            case "list":{
                 boolean canUse = this.pluginSettings.getBoolean("commands.list.allow_all") || this.pluginSettings.getList(Long.class, "commands.list.roles").stream().anyMatch(id -> author.getRoleIds().stream().anyMatch(snowflake -> snowflake.asLong() == id));
                 if(canUse){
                     StringBuilder builder = new StringBuilder();
@@ -182,14 +178,15 @@ public class DiscordChatBridge extends DefaultPlugin implements Runnable{
                     if(!activeUser.isEmpty()){
                         builder.append("Online player:\n");
                         activeUser.forEach(user -> builder.append(user.getName()).append(" "));
-                    } else {
+                    } else{
                         builder.append("Nobody online.");
                     }
                     channelSupplier.get().createMessage(builder.toString()).block();
                 }
                 break;
             }
-            case "tps": case "tps all": {
+            case "tps":
+            case "tps all":{
                 boolean canUse = this.pluginSettings.getBoolean("commands.tps.allow_all") || this.pluginSettings.getList(Long.class, "commands.tps.roles").stream().anyMatch(id -> author.getRoleIds().stream().anyMatch(snowflake -> snowflake.asLong() == id));
                 if(canUse){
                     channelSupplier.get().createMessage("Calculating TPS... (This takes 2 seconds)").block();
@@ -200,7 +197,7 @@ public class DiscordChatBridge extends DefaultPlugin implements Runnable{
                             if(builder.length() > 1000){
                                 channelSupplier.get().createMessage(builder.toString()).block();
                                 builder = new StringBuilder();
-                            } else {
+                            } else{
                                 builder.append(part).append("\n");
                             }
                         }
@@ -214,116 +211,122 @@ public class DiscordChatBridge extends DefaultPlugin implements Runnable{
     }
     
     private static class DiscordLoggerWrapper implements Logger {
-    
+        
         private static String CALLER = "Discord Bridge";
         private de.canitzp.mcserverwrapper.Logger log;
         
-        public DiscordLoggerWrapper(MCServerWrapper wrapper) {
+        public DiscordLoggerWrapper(MCServerWrapper wrapper){
             this.log = wrapper.getLog();
         }
-    
+        
         @Override
-        public String getName() {
+        public String getName(){
             return "Discord Wrapper Logger";
         }
-    
+        
         @Override
-        public boolean isTraceEnabled() {
+        public boolean isTraceEnabled(){
             return false;
         }
-    
+        
         @Override
-        public void trace(String msg) {}
-    
+        public void trace(String msg){
+        }
+        
         @Override
-        public void trace(String format, Object... arguments) {}
-    
+        public void trace(String format, Object... arguments){
+        }
+        
         @Override
-        public void trace(String msg, Throwable t) {}
-    
+        public void trace(String msg, Throwable t){
+        }
+        
         @Override
-        public boolean isDebugEnabled() {
+        public boolean isDebugEnabled(){
             return false;
         }
-    
+        
         @Override
-        public void debug(String msg) {}
-    
+        public void debug(String msg){
+        }
+        
         @Override
-        public void debug(String format, Object... arguments) {}
-    
+        public void debug(String format, Object... arguments){
+        }
+        
         @Override
-        public void debug(String msg, Throwable t) {}
-    
+        public void debug(String msg, Throwable t){
+        }
+        
         @Override
-        public boolean isInfoEnabled() {
+        public boolean isInfoEnabled(){
             return true;
         }
-    
+        
         @Override
-        public void info(String msg) {
+        public void info(String msg){
             this.log.info(CALLER, msg);
         }
-    
+        
         @Override
-        public void info(String format, Object... arguments) {
+        public void info(String format, Object... arguments){
             this.log.info(CALLER, this.format(format, arguments));
         }
-    
+        
         @Override
-        public void info(String msg, Throwable t) {
+        public void info(String msg, Throwable t){
             this.log.info(CALLER, msg);
             t.printStackTrace();
         }
-    
+        
         @Override
-        public boolean isWarnEnabled() {
+        public boolean isWarnEnabled(){
             return true;
         }
-    
+        
         @Override
-        public void warn(String msg) {
+        public void warn(String msg){
             this.log.warn(CALLER, msg);
         }
-    
+        
         @Override
-        public void warn(String format, Object... arguments) {
+        public void warn(String format, Object... arguments){
             this.log.warn(CALLER, this.format(format, arguments));
         }
-    
+        
         @Override
-        public void warn(String msg, Throwable t) {
+        public void warn(String msg, Throwable t){
             this.log.warn(CALLER, msg);
             t.printStackTrace();
         }
-    
+        
         @Override
-        public boolean isErrorEnabled() {
+        public boolean isErrorEnabled(){
             return true;
         }
-    
+        
         @Override
-        public void error(String msg) {
+        public void error(String msg){
             this.log.error(CALLER, msg);
         }
-    
+        
         @Override
-        public void error(String format, Object... arguments) {
+        public void error(String format, Object... arguments){
             this.log.error(CALLER, this.format(format, arguments));
         }
-    
+        
         @Override
-        public void error(String msg, Throwable t) {
+        public void error(String msg, Throwable t){
             this.log.error(CALLER, msg);
             t.printStackTrace();
         }
-    
+        
         @Nullable
         final String format(@Nullable String from, @Nullable Object... arguments){
-            if(from != null) {
+            if(from != null){
                 String computed = from;
-                if (arguments != null && arguments.length != 0) {
-                    for (Object argument : arguments) {
+                if(arguments != null && arguments.length != 0){
+                    for(Object argument : arguments){
                         computed = computed.replaceFirst("\\{\\}", Matcher.quoteReplacement(String.valueOf(argument)));
                     }
                 }

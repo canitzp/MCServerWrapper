@@ -4,7 +4,7 @@ import de.canitzp.mcserverwrapper.MCServerWrapper;
 
 import java.util.UUID;
 
-public class UserManagement{
+public class UserManagement {
     
     private final MCServerWrapper wrapper;
     
@@ -16,7 +16,7 @@ public class UserManagement{
         if(user.getUuid().equals(new UUID(0, 0))){
             this.wrapper.getLog().info("User Management", message);
             return true;
-        } else {
+        } else{
             String command = String.format("/tell %s %s", user.getName(), message);
             return this.wrapper.RUN_MC_TASK.sendToConsole(command);
         }

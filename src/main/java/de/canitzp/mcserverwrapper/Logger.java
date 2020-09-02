@@ -3,7 +3,7 @@ package de.canitzp.mcserverwrapper;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
-public class Logger{
+public class Logger {
     
     private final Deque<String> lines = new ArrayDeque<>();
     private int multipleEntryIndexNumber = 0;
@@ -32,11 +32,11 @@ public class Logger{
         Arrays.stream(formatting).forEach(ansicolor -> coloring.append(ansicolor.controlCode));
         
         String date = new SimpleDateFormat("dd.MMM.yyyy, HH:mm:ss").format(new Date());
-    
+        
         String finalMessage;
         if(caller != null){
             finalMessage = String.format("%s[%s] [%s]: %s%s", coloring.toString(), date, caller, msg, ANSICOLOR.RESET.controlCode);
-        } else {
+        } else{
             finalMessage = String.format("%s%s%s", coloring.toString(), msg, ANSICOLOR.RESET.controlCode);
         }
         
@@ -48,7 +48,7 @@ public class Logger{
             this.lines.addLast(finalMessage);
             System.out.println(finalMessage);
         }*/
-    
+        
         this.lines.addLast(finalMessage);
         System.out.println(finalMessage);
     }
@@ -68,10 +68,10 @@ public class Logger{
         BLUE("0;34"),
         PURPLE("0;35"),
         CYAN("0;36"),
-        WHITE("0;37")
-        ;
+        WHITE("0;37");
         
         private String controlCode;
+        
         ANSICOLOR(String controlCode){
             this.controlCode = "\033[" + controlCode + "m";
         }

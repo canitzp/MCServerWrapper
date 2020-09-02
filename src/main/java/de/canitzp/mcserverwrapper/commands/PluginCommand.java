@@ -8,7 +8,7 @@ import org.apache.commons.cli.CommandLine;
 import java.util.Arrays;
 
 
-public class PluginCommand implements IWrapperCommand{
+public class PluginCommand implements IWrapperCommand {
     
     @Override
     public String[] triggerNames(){
@@ -32,20 +32,20 @@ public class PluginCommand implements IWrapperCommand{
         if(args != null && args.length > 0){
             String type = args[0];
             switch(type){
-                case "list": {
+                case "list":{
                     wrapper.getLog().info(null, "List of running installed plugins.", Logger.ANSICOLOR.GREEN);
                     wrapper.getPluginManager().getPlugins().forEach(plugin -> {
                         wrapper.getLog().info(null, String.format("\t%s(%s)", plugin.getName(), plugin.getId()), Logger.ANSICOLOR.GREEN);
                     });
                     break;
                 }
-                default: {
+                default:{
                     wrapper.getLog().info(null, "The command you specified is unknown. Use one of the following:", Logger.ANSICOLOR.GREEN);
                     displayHelp = true;
                     break;
                 }
             }
-        } else {
+        } else{
             wrapper.getLog().info(null, "You need to specify at least on of the following sub commands:", Logger.ANSICOLOR.GREEN);
             displayHelp = true;
         }

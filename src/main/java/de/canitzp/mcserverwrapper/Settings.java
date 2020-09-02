@@ -9,9 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Optional;
 
-public class Settings{
+public class Settings {
     
     private final Config config;
     private final File configFile;
@@ -24,7 +23,7 @@ public class Settings{
     public void overwriteCurrentConfig(){
         try{
             FileUtils.write(this.configFile, this.config.root().render(ConfigRenderOptions.defaults().setOriginComments(false)), StandardCharsets.UTF_8);
-        }catch(IOException e){
+        } catch(IOException e){
             e.printStackTrace();
         }
     }

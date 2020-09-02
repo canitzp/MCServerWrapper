@@ -10,25 +10,24 @@ import com.mojang.brigadier.tree.RootCommandNode;
 import de.canitzp.mcserverwrapper.Logger;
 import de.canitzp.mcserverwrapper.MCServerWrapper;
 import de.canitzp.mcserverwrapper.ign.User;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.ParseException;
 
 import java.util.*;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class CommandHandler{
+public class CommandHandler {
     
     public static final String LOG_NAME = "Command Manager";
-    
-    private CommandDispatcher<User> commandDispatcher;
-    
     private final AtomicReference<Deque<CommandSchedule>> scheduledCommands = new AtomicReference<>(new ArrayDeque<>());
-    
     private final List<IWrapperCommand> commands = new ArrayList<>();
     private final List<IWrapperCommand> pluginCommands = new ArrayList<>();
     private final MCServerWrapper wrapper;
+    private CommandDispatcher<User> commandDispatcher;
     
     public CommandHandler(MCServerWrapper wrapper){
         this.wrapper = wrapper;
@@ -53,7 +52,7 @@ public class CommandHandler{
         this.pluginCommands.clear();
     }
     
-    public CommandDispatcher<User> getCommandDispatcher() {
+    public CommandDispatcher<User> getCommandDispatcher(){
         return commandDispatcher;
     }
     
@@ -86,7 +85,7 @@ public class CommandHandler{
             ParseResults<User> parse = this.commandDispatcher.parse(cs.command, cs.user);
             try{
                 int result = this.commandDispatcher.execute(parse);
-            }catch(CommandSyntaxException ignored){
+            } catch(CommandSyntaxException ignored){
                 String[] commandSplit = cs.command.split(" ", 2);
                 String commandName = commandSplit[0];
                 Optional<IWrapperCommand> c = this.findMatchingCommand(commandName);
@@ -98,21 +97,21 @@ public class CommandHandler{
                             if(commandSplit.length == 2){
                                 cmd = cmp.parse(c.get().options(), commandSplit[1].split(" "));
                             }
-                        }catch(ParseException e){
+                        } catch(ParseException e){
                             e.printStackTrace();
                         }
                         CommandLine finalCmd = cmd;
                         this.wrapper.submitRunnable(() -> {
                             try{
                                 c.get().execute(this.wrapper, User.CONSOLE, finalCmd);
-                            }catch(Exception e){
+                            } catch(Exception e){
                                 e.printStackTrace();
                             }
                         });
-                    } else {
+                    } else{
                         // todo can't run this command
                     }
-                } else {
+                } else{
                     this.wrapper.getLog().info(LOG_NAME, "No command found! '" + cs.command + "'");
                 }
             }
@@ -122,23 +121,24 @@ public class CommandHandler{
     public void info(User user, String caller, String message, Logger.ANSICOLOR... formatting){
         if(user != null && !Objects.equals(user, User.CONSOLE)){
             this.wrapper.getUserManagement().tellUser(user, message);
-        } else {
+        } else{
             this.wrapper.getLog().info(caller, message, formatting);
         }
     }
     
-    public static LiteralArgumentBuilder<User> literal(String name) {
+    public static LiteralArgumentBuilder<User> literal(String name){
         return LiteralArgumentBuilder.literal(name);
     }
     
-    public static <T> RequiredArgumentBuilder<User, T> argument(String name, ArgumentType<T> type) {
+    public static <T> RequiredArgumentBuilder<User, T> argument(String name, ArgumentType<T> type){
         return RequiredArgumentBuilder.argument(name, type);
     }
     
     static class CommandSchedule {
+        
         private User user;
         private String command;
-    
+        
         public CommandSchedule(User user, String command){
             this.user = user;
             this.command = command;

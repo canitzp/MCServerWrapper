@@ -20,22 +20,40 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class PluginManager implements Runnable{
+public class PluginManager implements Runnable {
     
     private static final String LOG_NAME = "Plugin Manager";
     private static final int TICK_TIME = 1;//50;
     
     private final MCServerWrapper wrapper;
+    private final List<DefaultPlugin> plugins = new ArrayList<>();
     private Path pluginDirectory;
     private Path pluginSettingsDirectory;
-    
     private boolean shouldRun = true;
-    private final List<DefaultPlugin> plugins = new ArrayList<>();
     
     //private final PluginCommunicator pluginCommunicator = new PluginCommunicator(this);
     
     public PluginManager(MCServerWrapper wrapper){
         this.wrapper = wrapper;
+    }
+    
+    @Override
+    public void run(){
+        long nextTick = System.currentTimeMillis();
+        while(this.shouldRun && !this.plugins.isEmpty()){
+            if(nextTick <= System.currentTimeMillis()){
+                nextTick = System.currentTimeMillis() + (1000 / TICK_TIME);
+                for(DefaultPlugin plugin : this.plugins){
+                    plugin.getEvent(TickEvent.class).ifPresent(TickEvent::tick);
+                }
+            }
+            long sleepTime = nextTick - System.currentTimeMillis();
+            if(sleepTime > 0){
+                this.wrapper.sleep(sleepTime - 1);
+            } else if(sleepTime < 0){
+                this.wrapper.getLog().warn(LOG_NAME, "One plugin tick took longer than allowed! This can lead to slower ticks fpr plugins! Time since last tick: " + (-sleepTime) + "ms, should be zero or negative!");
+            }
+        }
     }
     
     // load/reload all plugins
@@ -59,7 +77,7 @@ public class PluginManager implements Runnable{
             dcb.setWrapper(this.wrapper);
             this.plugins.add(dcb);
         }
-    
+        
         if(this.wrapper.getSettings().getBoolean("internal_plugins.enable_webmap")){
             Settings settings = new Settings(new File(pluginSettingsDirectory.toFile(), "webmap.conf"), "webmap.default.conf");
             if(overwriteSettings){
@@ -76,25 +94,6 @@ public class PluginManager implements Runnable{
         this.plugins.forEach(defaultPlugin -> defaultPlugin.registerCommand(this.wrapper.getCommandHandler().getCommandDispatcher()));
         
         this.plugins.forEach(DefaultPlugin::init);
-    }
-    
-    @Override
-    public void run(){
-        long nextTick = System.currentTimeMillis();
-        while(this.shouldRun && !this.plugins.isEmpty()){
-            if(nextTick <= System.currentTimeMillis()){
-                nextTick = System.currentTimeMillis() + (1000 / TICK_TIME);
-                for(DefaultPlugin plugin : this.plugins){
-                    plugin.getEvent(TickEvent.class).ifPresent(TickEvent::tick);
-                }
-            }
-            long sleepTime = nextTick - System.currentTimeMillis();
-            if(sleepTime > 0){
-                this.wrapper.sleep(sleepTime - 1);
-            } else if(sleepTime < 0){
-                this.wrapper.getLog().warn(LOG_NAME, "One plugin tick took longer than allowed! This can lead to slower ticks fpr plugins! Time since last tick: " + (-sleepTime) + "ms, should be zero or negative!");
-            }
-        }
     }
     
     public void stop(){

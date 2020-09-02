@@ -1,6 +1,6 @@
 package de.canitzp.mcserverwrapper.plugins;
 
-public class PluginCommunicator{
+public class PluginCommunicator {
     
     private final PluginManager manager;
     

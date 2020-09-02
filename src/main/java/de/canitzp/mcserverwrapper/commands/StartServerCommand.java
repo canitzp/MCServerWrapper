@@ -4,7 +4,7 @@ import de.canitzp.mcserverwrapper.MCServerWrapper;
 import de.canitzp.mcserverwrapper.ign.User;
 import org.apache.commons.cli.CommandLine;
 
-public class StartServerCommand implements IWrapperCommand{
+public class StartServerCommand implements IWrapperCommand {
     
     @Override
     public String[] triggerNames(){

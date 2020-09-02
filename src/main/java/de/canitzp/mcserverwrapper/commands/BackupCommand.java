@@ -6,7 +6,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
-public class BackupCommand implements IWrapperCommand{
+public class BackupCommand implements IWrapperCommand {
     
     private Options options = new Options().addOption(new Option("s", "stop", false, "")).addOption(new Option("r", "restore", true, ""));
     
@@ -38,10 +38,10 @@ public class BackupCommand implements IWrapperCommand{
             // todo
             if(restoreNumber != null){
             
-            } else {
+            } else{
             
             }
-        } else {
+        } else{
             boolean shouldStopServer = cmd != null && cmd.hasOption("stop");
             if(shouldStopServer){
                 boolean wasRunning = wrapper.RUN_MC_TASK.isRunning();
@@ -53,16 +53,16 @@ public class BackupCommand implements IWrapperCommand{
                         if(wasRunning){
                             wrapper.startMinecraftServer();
                         }
-                    } else {
+                    } else{
                         wrapper.getLog().error(CommandHandler.LOG_NAME, "Backup hasn't finished!");
                     }
                 }
-            } else {
+            } else{
                 wrapper.getLog().info(CommandHandler.LOG_NAME, "Live backup started.");
                 if(wrapper.BACKUP_MANAGER.scheduleBackup("manual")){
                     wrapper.BACKUP_MANAGER.waitForBackupFree();
                     wrapper.getLog().info(CommandHandler.LOG_NAME, "Backup done.");
-                } else {
+                } else{
                     wrapper.getLog().error(CommandHandler.LOG_NAME, "Backup hasn't finished!");
                 }
             }

@@ -12,9 +12,10 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.*;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -25,11 +26,11 @@ public class Dimension {
     private String name;
     private Map<BlockPos, MCBlock> blockMap = new HashMap<>();
     
-    public Dimension(String name) {
+    public Dimension(String name){
         this.name = name;
     }
     
-    public void readFromDisk(MCServerWrapper wrapper, File worldDir, File tileFolder) {
+    public void readFromDisk(MCServerWrapper wrapper, File worldDir, File tileFolder){
         if(worldDir.exists()){
             long allStartTime = System.currentTimeMillis();
             // 12 Region files:
@@ -54,7 +55,7 @@ public class Dimension {
             while(!pool.getQueue().isEmpty() || pool.getActiveCount() > 0){
                 try{
                     Thread.sleep(500);
-                }catch(InterruptedException e){
+                } catch(InterruptedException e){
                     e.printStackTrace();
                 }
             }
@@ -71,19 +72,20 @@ public class Dimension {
     }
     
     private static class MCAInterpreter implements Runnable {
+        
         private final File mcaFile;
         private final File imageDir;
         
         private final List<ReturnState> allStates;
-    
-        public MCAInterpreter(File mcaFile, File imageDir, List<ReturnState> returnStates) {
+        
+        public MCAInterpreter(File mcaFile, File imageDir, List<ReturnState> returnStates){
             this.mcaFile = mcaFile;
             this.imageDir = imageDir;
             this.allStates = returnStates;
         }
         
         @Override
-        public void run() {
+        public void run(){
             if(this.mcaFile.exists()){
                 //long startTime = System.currentTimeMillis();
                 //System.out.println("Starting region file " + this.mcaFile.getName());
@@ -145,16 +147,16 @@ public class Dimension {
                         ImageIO.write(bufferedImage, "png", imageFile);
                         this.allStates.add(ReturnState.DONE);
                         //System.out.println("Finished region(" + regionX + " " + regionZ + ") file after " + (System.currentTimeMillis() - startTime) + "ms");
-                    }catch(IOException e){
+                    } catch(IOException e){
                         System.out.println("exception");
                         e.printStackTrace();
                         this.allStates.add(ReturnState.ERROR);
                     }
-                } else {
+                } else{
                     System.out.println("couldn match");
                     this.allStates.add(ReturnState.ERROR);
                 }
-            } else {
+            } else{
                 System.out.println("file not exist");
                 this.allStates.add(ReturnState.ERROR);
             }

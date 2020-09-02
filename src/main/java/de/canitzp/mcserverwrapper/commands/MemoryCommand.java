@@ -7,22 +7,22 @@ import org.apache.commons.cli.CommandLine;
 public class MemoryCommand implements IWrapperCommand {
     
     @Override
-    public String[] triggerNames() {
+    public String[] triggerNames(){
         return new String[]{"mem", "memory"};
     }
     
     @Override
-    public String helpDescription() {
+    public String helpDescription(){
         return "Shows the current memory usage of the wrapper. Does not show any data of the server!";
     }
     
     @Override
-    public User.UserLevel minUserLevel() {
+    public User.UserLevel minUserLevel(){
         return User.UserLevel.OWNER;
     }
     
     @Override
-    public boolean execute(MCServerWrapper wrapper, User user, CommandLine cmd) {
+    public boolean execute(MCServerWrapper wrapper, User user, CommandLine cmd){
         long maxMemory = Runtime.getRuntime().maxMemory();
         long maxMemoryInMegabytes = Math.round(maxMemory / 1000000F);
         long usedMemory = maxMemory - Runtime.getRuntime().freeMemory();

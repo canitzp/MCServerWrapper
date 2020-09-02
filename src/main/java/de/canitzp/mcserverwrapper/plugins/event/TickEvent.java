@@ -6,7 +6,7 @@ public class TickEvent extends PluginEvent {
     
     private Runnable action;
     
-    public TickEvent(Runnable action) {
+    public TickEvent(Runnable action){
         this.action = action;
     }
     

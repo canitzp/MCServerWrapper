@@ -4,8 +4,8 @@ import de.canitzp.mcserverwrapper.commands.CommandHandler;
 import de.canitzp.mcserverwrapper.ign.MinecraftConsoleReader;
 import de.canitzp.mcserverwrapper.ign.UserManagement;
 import de.canitzp.mcserverwrapper.plugins.PluginManager;
-import de.canitzp.mcserverwrapper.tasks.ConsoleInterpreter;
 import de.canitzp.mcserverwrapper.tasks.BackupManager;
+import de.canitzp.mcserverwrapper.tasks.ConsoleInterpreter;
 import de.canitzp.mcserverwrapper.tasks.RunMinecraftTask;
 import de.canitzp.mcserverwrapper.tasks.RunMinecraftUpdate;
 
@@ -15,21 +15,17 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MCServerWrapper{
+public class MCServerWrapper {
     
     private static final String LOG_NAME = "Main";
-    
-    //private final List<String> LOG_LINES = new ArrayList<>();
-    private final Path configFile = Paths.get("./wrapper-settings.conf");
-    private final AtomicBoolean LOCK_APPLICATION = new AtomicBoolean(false);
-    
     public final ConsoleInterpreter CONSOLE_INTERPRETER = new ConsoleInterpreter(this);
     public final BackupManager BACKUP_MANAGER = new BackupManager(this);
-    
     public final ThreadPoolExecutor THREADS = (ThreadPoolExecutor) Executors.newCachedThreadPool();
     public final RunMinecraftTask RUN_MC_TASK = new RunMinecraftTask(this);
     public final RunMinecraftUpdate RUN_MC_UPDATE = new RunMinecraftUpdate(this);
-    
+    //private final List<String> LOG_LINES = new ArrayList<>();
+    private final Path configFile = Paths.get("./wrapper-settings.conf");
+    private final AtomicBoolean LOCK_APPLICATION = new AtomicBoolean(false);
     private final Logger LOGGER = new Logger();
     private final CommandHandler commandHandler = new CommandHandler(this);
     private final MinecraftConsoleReader minecraftConsoleReader = new MinecraftConsoleReader(this);
@@ -40,13 +36,13 @@ public class MCServerWrapper{
     
     public MCServerWrapper(boolean startInLockedMode){
         /*
-        * Important configuration reading and writhing!
-        */
+         * Important configuration reading and writhing!
+         */
         this.loadConfiguration(true);
-    
+        
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             this.getLog().info(LOG_NAME, "Stopping MCServerWrapper");
-            if (this.RUN_MC_TASK.isRunning()) {
+            if(this.RUN_MC_TASK.isRunning()){
                 this.RUN_MC_TASK.sendToConsole("stop");
             }
             this.CONSOLE_INTERPRETER.stop();
@@ -66,18 +62,18 @@ public class MCServerWrapper{
         if(!startInLockedMode){
             this.startMinecraftUpdate();
             this.waitForUpdate();
-    
+            
             this.startMinecraftServer();
-        } else {
+        } else{
             this.LOCK_APPLICATION.lazySet(true);
             this.getLog().info(LOG_NAME, "Application started in LOCKED mode.");
         }
-    
-        while(this.isLockMode() || THREADS.getActiveCount() != 0) {
+        
+        while(this.isLockMode() || THREADS.getActiveCount() != 0){
             sleep(250L);
             try{
                 this.tick();
-            }catch(Exception e){
+            } catch(Exception e){
                 e.printStackTrace();
             }
         }
@@ -106,11 +102,12 @@ public class MCServerWrapper{
         // ticks should be disabled, when the application is in wrapper only mode
         if(!this.LOCK_APPLICATION.get()){
             // tick the updater. this check if it needs to auto update after a time interval
-            this.RUN_MC_UPDATE.tick();
-    
+            if(this.settings.getBoolean("update.enable_updater")){ // check if we are allowed to auto update
+                this.RUN_MC_UPDATE.tick();
+            }
+            
             // tick the backup manager to do automated backups if needed
             this.BACKUP_MANAGER.tick();
-            
         }
         
         if(this.RUN_MC_TASK.isRunning()){
@@ -136,9 +133,11 @@ public class MCServerWrapper{
     }
     
     public void startMinecraftUpdate(){
-        if(!this.RUN_MC_UPDATE.isRunning()){
-            this.THREADS.submit(this.RUN_MC_UPDATE);
-            this.sleep(1000); // wait for the process to start
+        if(this.settings.getBoolean("update.enable_updater")){ // check if we are allowed to auto update
+            if(!this.RUN_MC_UPDATE.isRunning()){
+                this.THREADS.submit(this.RUN_MC_UPDATE);
+                this.sleep(1000); // wait for the process to start
+            }
         }
     }
     
@@ -151,7 +150,7 @@ public class MCServerWrapper{
     public void sleep(long millis){
         try{
             Thread.sleep(millis);
-        }catch(InterruptedException e){
+        } catch(InterruptedException e){
             e.printStackTrace();
         }
     }

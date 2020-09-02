@@ -6,16 +6,12 @@ import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
-public class MinecraftConsoleReader{
-    
-    private AtomicReference<Deque<String>> linesToRead = new AtomicReference<>(new ArrayDeque<>());
-    
-    private File usercache, ops;
+public class MinecraftConsoleReader {
     
     private final MCServerWrapper wrapper;
+    private AtomicReference<Deque<String>> linesToRead = new AtomicReference<>(new ArrayDeque<>());
+    private File usercache, ops;
     private List<User> activeUser = new ArrayList<>();
     
     public MinecraftConsoleReader(MCServerWrapper wrapper){
@@ -32,7 +28,7 @@ public class MinecraftConsoleReader{
         while(!this.linesToRead.get().isEmpty()){
             String line = this.linesToRead.get().removeFirst();
             String[] splitByArea = line.split(":", 4);
-    
+            
             if(splitByArea.length == 4){
                 String pureLine = splitByArea[3];
                 if(!pureLine.isEmpty()){
@@ -101,7 +97,8 @@ public class MinecraftConsoleReader{
             try{
                 int startupTimeInMilliseconds = Math.round(Float.parseFloat(unparsedTime) * 1000);
                 this.wrapper.getPluginManager().onServerStared(startupTimeInMilliseconds);
-            } catch(NumberFormatException ignored){}
+            } catch(NumberFormatException ignored){
+            }
         } else if(pureLine.matches("Stopping\\sthe\\sserver")){
             this.wrapper.getPluginManager().onServerStop();
         } else if(pureLine.matches("Saving\\sthe\\sgame\\s.*")){

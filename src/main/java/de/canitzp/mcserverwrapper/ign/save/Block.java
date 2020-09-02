@@ -7,7 +7,9 @@ import de.canitzp.mcserverwrapper.MCServerWrapper;
 import org.apache.commons.io.FileUtils;
 
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.StringJoiner;
@@ -21,7 +23,7 @@ public class Block {
     private float opacity;
     private String textureName;
     
-    private Block(String namespace, Color color, float opacity, String textureName) {
+    private Block(String namespace, Color color, float opacity, String textureName){
         this.namespace = namespace;
         if(color != null){
             this.color = new Color(color.getRed(), color.getGreen(), color.getBlue(), Math.round(255 * opacity));
@@ -31,15 +33,21 @@ public class Block {
         //System.out.println("Loaded: " + this);
     }
     
+    @Override
+    public String toString(){
+        return new StringJoiner(", ", Block.class.getSimpleName() + "[", "]")
+            .add("namespace='" + namespace + "'")
+            .add("color=" + color)
+            .add("opacity=" + opacity)
+            .add("textureName='" + textureName + "'")
+            .toString();
+    }
+    
     // return if it should stop looking for more blocks
-    public void render(Graphics2D g, int x, int y, int size) {
+    public void render(Graphics2D g, int x, int y, int size){
         if(this.color != null){
             this.renderColor(g, x, y, size);
         }
-    }
-    
-    public static Block getFromNamespace(String namespace){
-        return BLOCKS.getOrDefault(namespace, BLOCKS.get("minecraft:air"));
     }
     
     public boolean isFullBlock(){
@@ -55,14 +63,8 @@ public class Block {
         g.fillRect(x, y, size, size);
     }
     
-    @Override
-    public String toString() {
-        return new StringJoiner(", ", Block.class.getSimpleName() + "[", "]")
-            .add("namespace='" + namespace + "'")
-            .add("color=" + color)
-            .add("opacity=" + opacity)
-            .add("textureName='" + textureName + "'")
-            .toString();
+    public static Block getFromNamespace(String namespace){
+        return BLOCKS.getOrDefault(namespace, BLOCKS.get("minecraft:air"));
     }
     
     private static void registerBlock(Block block){
@@ -75,12 +77,12 @@ public class Block {
         if(!blockDefinitionJson.exists()){
             try{
                 FileUtils.copyInputStreamToFile(Block.class.getResourceAsStream("/webmap/block_colors.json"), blockDefinitionJson);
-            }catch(IOException e){
+            } catch(IOException e){
                 e.printStackTrace();
                 return;
             }
         }
-    
+        
         try(FileReader fr = new FileReader(blockDefinitionJson)){
             JsonElement rootElement = JsonParser.parseReader(fr);
             if(rootElement.isJsonObject()){
@@ -105,7 +107,7 @@ public class Block {
                             String texture = jo.get("texture").getAsString();
                             registerBlock(new Block(namespace, null, opacity, texture));
                         }
-                    } else {
+                    } else{
                         String value = entry.getValue().getAsString();
                         try{
                             registerBlock(new Block(namespace, Color.decode(value), 1.0F, null)); // register with color
@@ -115,10 +117,9 @@ public class Block {
                     }
                 }
             }
-        }catch(IOException e){
+        } catch(IOException e){
             e.printStackTrace();
         }
-        System.out.println(BLOCKS);
     }
     
 }

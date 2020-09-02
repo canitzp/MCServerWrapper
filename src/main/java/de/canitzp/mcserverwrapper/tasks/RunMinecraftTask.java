@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class RunMinecraftTask implements Runnable{
+public class RunMinecraftTask implements Runnable {
     
     private static final String LOG_NAME = "Launcher";
     
@@ -41,16 +41,17 @@ public class RunMinecraftTask implements Runnable{
         
         this.isRunning.set(true);
         
-        try {
+        try{
             List<String> command = new ArrayList<>();
             command.add(this.wrapper.getSettings().getString("general.java_path"));
-    
-            int ram = this.wrapper.getSettings().getInt("general.minecraft_ram_maximum");
+            
+            int wrapper_ram = this.wrapper.getSettings().getInt("general.wrapper_ram_maximum");
+            int ram = this.wrapper.getSettings().getInt("general.minecraft_ram_maximum") - wrapper_ram;
             command.add("-Xmx" + ram + "M");
             command.add("-Xms" + ram + "M");
-    
+            
             command.addAll(this.wrapper.getSettings().getList(String.class, "general.additional_vm_parameter"));
-    
+            
             if(this.wrapper.getSettings().getBoolean("general.pass_parameter")){
                 List<String> ignoredArgs = this.wrapper.getSettings().getList(String.class, "general.ignored_startup_parameter");
                 for(String inputArgument : ManagementFactory.getRuntimeMXBean().getInputArguments()){
@@ -69,7 +70,7 @@ public class RunMinecraftTask implements Runnable{
             List<String> lines = new ArrayList<>();
             lines.add("========== Starting Server ==========");
             lines.add("Server file:   '" + jarFile.getName() + "'");
-            lines.add("Server Memory: '" + ram + "MB'");
+            lines.add("Server Memory: '" + ram + "MB' (reserved for wrapper: '" + wrapper_ram + "MB')");
             lines.add("System Memory: '" + systemRamMegabytes + "MB' ('" + systemRamBytes + "Bytes')");
             lines.add("Directory:     '" + jarFile.getParentFile().getCanonicalPath() + File.separator + "'");
             lines.add("Command:       '" + String.join(" ", command) + "'");
@@ -88,9 +89,9 @@ public class RunMinecraftTask implements Runnable{
             try(InputStreamReader isr = new InputStreamReader(p.getInputStream(), StandardCharsets.UTF_8)){
                 try(BufferedReader br = new BufferedReader(isr)){
                     String line;
-                    while(p.isAlive()) {
+                    while(p.isAlive()){
                         this.wrapper.sleep(1);
-                        while((line = br.readLine()) != null) {
+                        while((line = br.readLine()) != null){
                             this.wrapper.getMinecraftConsoleReader().scheduleLine(line);
                         }
                     }
@@ -106,21 +107,21 @@ public class RunMinecraftTask implements Runnable{
             this.wrapper.getPluginManager().onServerStopped(serverUptime, p.exitValue());
             
             // evaluate exit code
-            if (p.exitValue() != 0) {
+            if(p.exitValue() != 0){
                 this.wrapper.getLog().error(LOG_NAME, "Minecraft server exited with an error! '" + p.exitValue() + "'");
                 // open error stream to get the exception and print it to logger
                 try(InputStreamReader isr = new InputStreamReader(p.getErrorStream(), StandardCharsets.UTF_8)){
                     String line;
                     try(BufferedReader br = new BufferedReader(isr)){
-                        while((line = br.readLine()) != null) {
+                        while((line = br.readLine()) != null){
                             this.wrapper.getLog().warn(LOG_NAME, line);
                         }
                     }
                 }
-            } else {
+            } else{
                 this.wrapper.getLog().info(LOG_NAME, "Minecraft server exited fine.");
             }
-        } catch (IOException e) {
+        } catch(IOException e){
             e.printStackTrace();
         }
         
@@ -134,10 +135,10 @@ public class RunMinecraftTask implements Runnable{
                     this.processWriter.get().println(msg);
                     this.processWriter.get().flush();
                     return true;
-                } else {
+                } else{
                     this.wrapper.getLog().error(LOG_NAME, "Can't send to console, since minecraft has a communication problem! '" + msg + "'");
                 }
-            } else {
+            } else{
                 this.wrapper.getLog().error(LOG_NAME, "Can't send to console, since minecraft isn't running! '" + msg + "'");
             }
         }
@@ -151,7 +152,7 @@ public class RunMinecraftTask implements Runnable{
     public boolean stopServer(){
         if(this.isRunning()){
             this.sendToConsole("stop");
-            int killTime = 10*60; // one minute before it decides to kill the loop
+            int killTime = 10 * 60; // one minute before it decides to kill the loop
             while(this.isRunning()){
                 this.wrapper.sleep(100);
                 killTime--;

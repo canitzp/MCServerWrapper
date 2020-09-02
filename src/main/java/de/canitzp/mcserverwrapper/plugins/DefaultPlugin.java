@@ -12,34 +12,34 @@ import java.util.Optional;
 
 public abstract class DefaultPlugin {
     
-    private String id, name, version;
-    private List<PluginEvent> events = new ArrayList<>();
     protected Settings pluginSettings;
     protected MCServerWrapper wrapper;
+    private String id, name, version;
+    private List<PluginEvent> events = new ArrayList<>();
     
-    public DefaultPlugin(String id, String name, String version) {
+    public DefaultPlugin(String id, String name, String version){
         this.id = id;
         this.name = name;
         this.version = version;
     }
     
-    public String getId() {
+    public String getId(){
         return id;
     }
     
-    public String getName() {
+    public String getName(){
         return name;
     }
     
-    public String getVersion() {
+    public String getVersion(){
         return version;
     }
     
-    public void setPluginSettings(Settings pluginSettings) {
+    public void setPluginSettings(Settings pluginSettings){
         this.pluginSettings = pluginSettings;
     }
     
-    public void setWrapper(MCServerWrapper wrapper) {
+    public void setWrapper(MCServerWrapper wrapper){
         this.wrapper = wrapper;
     }
     
@@ -60,7 +60,9 @@ public abstract class DefaultPlugin {
     
     protected abstract void stop();
     
-    protected void registerCommand(CommandHandler commandHandler){}
+    protected void registerCommand(CommandHandler commandHandler){
+    }
     
-    protected void registerCommand(CommandDispatcher<User> dispatcher){}
+    protected void registerCommand(CommandDispatcher<User> dispatcher){
+    }
 }

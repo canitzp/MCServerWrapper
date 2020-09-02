@@ -10,7 +10,7 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -21,27 +21,27 @@ public class DebugCommand implements IWrapperCommand {
     private final Options options = new Options().addOption("a", "all", false, "").addOption("t", "time", true, "");
     
     @Override
-    public String[] triggerNames() {
+    public String[] triggerNames(){
         return new String[]{"debug"};
     }
     
     @Override
-    public Options options() {
+    public Options options(){
         return this.options;
     }
     
     @Override
-    public String helpDescription() {
+    public String helpDescription(){
         return "Command to debug minecraft (Version 1.8 and above). This runs the debug command for some seconds and then prints the current tps and the most tick consuming tasks. Shows current tps. Append --all to view the main tps killer";
     }
     
     @Override
-    public User.UserLevel minUserLevel() {
+    public User.UserLevel minUserLevel(){
         return User.UserLevel.OWNER;
     }
     
     @Override
-    public boolean execute(MCServerWrapper wrapper, User user, CommandLine cmd) {
+    public boolean execute(MCServerWrapper wrapper, User user, CommandLine cmd){
         boolean viewAll = false;
         int time = TIME_TO_WAIT;
         if(cmd != null){
@@ -50,7 +50,7 @@ public class DebugCommand implements IWrapperCommand {
                 String timeRaw = cmd.getOptionValue("time");
                 try{
                     time = Integer.parseInt(timeRaw);
-                }catch(NumberFormatException ignored){
+                } catch(NumberFormatException ignored){
                     wrapper.getLog().error(CommandHandler.LOG_NAME, "--time is specified without a valid number");
                     return true;
                 }
@@ -74,13 +74,13 @@ public class DebugCommand implements IWrapperCommand {
             wrapper.sleep(500); // time to let mc write the debug log
             try{
                 interpretDebugLog(wrapper, viewAll, milliseconds, messageHandler);
-            }catch(IOException e){
+            } catch(IOException e){
                 e.printStackTrace();
             }
         }
     }
     
-    private static void interpretDebugLog(MCServerWrapper wrapper, boolean viewAll, int time, Consumer<String> messageHandler) throws IOException {
+    private static void interpretDebugLog(MCServerWrapper wrapper, boolean viewAll, int time, Consumer<String> messageHandler) throws IOException{
         File debugFolder = new File(wrapper.getSettings().getFile("general.jar_path").getParentFile(), "debug");
         if(debugFolder.exists()){
             List<File> orderedFiles = FileUtils.listFiles(debugFolder, null, false).stream().sorted((o1, o2) -> (int) (o2.lastModified() - o1.lastModified())).collect(Collectors.toList());
@@ -115,7 +115,7 @@ public class DebugCommand implements IWrapperCommand {
                                 String secondTickTimeString = line.substring(secondTickTimeStartIndex, line.indexOf(")", secondTickTimeStartIndex));
                                 float percentageRelative = Float.parseFloat(line.substring(line.indexOf("-") + 1, line.indexOf("%")));
                                 float percentageAbsolute = Float.parseFloat(line.substring(line.indexOf("%/") + 2, line.lastIndexOf("%")));
-    
+                                
                                 message.append(String.format("%s%s %.2f%%", new String(new char[index]).replace("\0", "|   "), name, percentageAbsolute));
                                 message.append("\n");
                             } catch(Exception ignored){

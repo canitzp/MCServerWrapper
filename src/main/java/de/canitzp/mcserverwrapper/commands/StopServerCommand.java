@@ -5,7 +5,7 @@ import de.canitzp.mcserverwrapper.MCServerWrapper;
 import de.canitzp.mcserverwrapper.ign.User;
 import org.apache.commons.cli.CommandLine;
 
-public class StopServerCommand implements IWrapperCommand{
+public class StopServerCommand implements IWrapperCommand {
     
     @Override
     public String[] triggerNames(){
@@ -26,7 +26,7 @@ public class StopServerCommand implements IWrapperCommand{
     public boolean execute(MCServerWrapper wrapper, User user, CommandLine cmd){
         if(wrapper.isLockMode()){
             wrapper.setLock(false);
-        } else {
+        } else{
             wrapper.setLock(true);
             wrapper.RUN_MC_TASK.stopServer();
             wrapper.getLog().info(CommandHandler.LOG_NAME, "Server stopped. LOCKED MODE. The wrapper command prefix is optional in this mode. Type 'stop' to close this wrapper or use 'start' to start the server.", Logger.ANSICOLOR.GREEN);

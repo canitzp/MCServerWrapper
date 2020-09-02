@@ -5,7 +5,7 @@ import de.canitzp.mcserverwrapper.ign.User;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Options;
 
-public interface IWrapperCommand{
+public interface IWrapperCommand {
     
     Options EMPTY_OPTIONS = new Options();
     

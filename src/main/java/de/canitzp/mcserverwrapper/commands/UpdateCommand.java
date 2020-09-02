@@ -4,7 +4,7 @@ import de.canitzp.mcserverwrapper.MCServerWrapper;
 import de.canitzp.mcserverwrapper.ign.User;
 import org.apache.commons.cli.CommandLine;
 
-public class UpdateCommand implements IWrapperCommand{
+public class UpdateCommand implements IWrapperCommand {
     
     @Override
     public String[] triggerNames(){
@@ -26,7 +26,7 @@ public class UpdateCommand implements IWrapperCommand{
         boolean wasRunning = wrapper.RUN_MC_TASK.isRunning();
         wrapper.startMinecraftUpdate();
         wrapper.waitForUpdate();
-        if(wasRunning) {
+        if(wasRunning){
             wrapper.startMinecraftServer();
         }
         return true;

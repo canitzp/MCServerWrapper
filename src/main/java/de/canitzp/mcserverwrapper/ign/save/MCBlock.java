@@ -1,7 +1,5 @@
 package de.canitzp.mcserverwrapper.ign.save;
 
-import de.canitzp.mcserverwrapper.MCServerWrapper;
-
 import java.awt.*;
 
 public enum MCBlock {
@@ -73,18 +71,18 @@ public enum MCBlock {
     private Color color;
     private float opacity = 1.0F;
     
-    MCBlock(String namespace, Color color, float opacity) {
+    MCBlock(String namespace, Color color, float opacity){
         this.namespace = namespace;
         this.color = new Color(color.getRed(), color.getGreen(), color.getBlue(), Math.round(255 * opacity));
         this.opacity = opacity;
     }
     
-    MCBlock(String namespace, Color color) {
+    MCBlock(String namespace, Color color){
         this.namespace = namespace;
         this.color = color;
     }
     
-    public String getNamespace() {
+    public String getNamespace(){
         return namespace;
     }
     

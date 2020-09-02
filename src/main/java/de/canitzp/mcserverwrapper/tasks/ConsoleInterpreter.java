@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class ConsoleInterpreter implements Runnable{
+public class ConsoleInterpreter implements Runnable {
     
     private static final String LOG_NAME = "CONSOLE BUFFER";
     
@@ -29,11 +29,11 @@ public class ConsoleInterpreter implements Runnable{
     @Override
     public void run(){
         String wrapperCommandPrefix = this.wrapper.getSettings().getString("general.wrapper_command_prefix");
-        try (BufferedReader in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))){
+        try(BufferedReader in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8))){
             String line;
-            while(this.run.get()) {
+            while(this.run.get()){
                 this.wrapper.sleep(10);
-                while((line = in.readLine()) != null) {
+                while((line = in.readLine()) != null){
                     if(!line.isEmpty()){
                         if(!line.startsWith(wrapperCommandPrefix) && this.wrapper.RUN_MC_TASK.isRunning()){
                             if(!this.printWriters.isEmpty()){
@@ -44,10 +44,10 @@ public class ConsoleInterpreter implements Runnable{
                                         w.flush();
                                     }
                                 }
-                            } else {
+                            } else{
                                 this.wrapper.getLog().error(LOG_NAME, "Can't write to Server '" + line + "'");
                             }
-                        } else {
+                        } else{
                             // command for wrapper
                             this.wrapper.getCommandHandler().scheduleCommand(User.CONSOLE, line);
                             //this.wrapper.appendCommandToProcess(line);
@@ -55,7 +55,7 @@ public class ConsoleInterpreter implements Runnable{
                     }
                 }
             }
-        } catch (IOException var3) {
+        } catch(IOException var3){
             var3.printStackTrace();
         }
     }
