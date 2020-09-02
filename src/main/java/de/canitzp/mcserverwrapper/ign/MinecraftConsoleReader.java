@@ -4,7 +4,10 @@ import de.canitzp.mcserverwrapper.MCServerWrapper;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class MinecraftConsoleReader{
     
@@ -41,8 +44,8 @@ public class MinecraftConsoleReader{
     }
     
     private void interpretLine(String pureLine){
-        this.wrapper.getLog().info("Minecraft", pureLine);
-
+        AtomicBoolean redirectToConsole = new AtomicBoolean(true);
+        
         if(pureLine.matches("(\\[.*\\]|<.*>)\\s.*")){
             String[] split = pureLine.split("\\s", 2);
             if(split.length == 2){
@@ -55,7 +58,7 @@ public class MinecraftConsoleReader{
                 if(message.startsWith(this.wrapper.getSettings().getString("general.wrapper_command_prefix"))){
                     this.wrapper.getCommandHandler().scheduleCommand(user, message);
                 }
-                this.wrapper.getPluginManager().onChatMessage(user, message);
+                redirectToConsole.lazySet(this.wrapper.getPluginManager().onChatMessage(user, message));
             }
         } else if(pureLine.matches(".*\\sjoined\\sthe\\sgame")){
             String playerName = pureLine.substring(0, pureLine.indexOf(" "));
@@ -72,10 +75,53 @@ public class MinecraftConsoleReader{
                 this.activeUser.remove(user1);
                 this.wrapper.getPluginManager().onPlayerLeave(user1);
             });
+        } else if(pureLine.matches(".*\\shas\\smade\\sthe\\sadvancement\\s\\[.*]")){
+            String playerName = pureLine.substring(0, pureLine.indexOf(" "));
+            String advancementName = pureLine.substring(pureLine.lastIndexOf("[") + 1, pureLine.indexOf("]"));
+            Optional<User> user = this.activeUser.stream().filter(u -> playerName.equals(u.getName())).findFirst();
+            user.ifPresent(user1 -> {
+                this.wrapper.getPluginManager().onPlayerAdvancement(user1, advancementName);
+            });
+        } else if(pureLine.matches(".*\\shas\\reached\\sthe\\sgoal\\s\\[.*]")){
+            String playerName = pureLine.substring(0, pureLine.indexOf(" "));
+            String goalName = pureLine.substring(pureLine.lastIndexOf("[") + 1, pureLine.indexOf("]"));
+            Optional<User> user = this.activeUser.stream().filter(u -> playerName.equals(u.getName())).findFirst();
+            user.ifPresent(user1 -> {
+                this.wrapper.getPluginManager().onPlayerReachedGoal(user1, goalName);
+            });
+        } else if(pureLine.matches(".*\\shas\\scompleted\\sthe\\schallenge\\s\\[.*]")){
+            String playerName = pureLine.substring(0, pureLine.indexOf(" "));
+            String challengeName = pureLine.substring(pureLine.lastIndexOf("[") + 1, pureLine.indexOf("]"));
+            Optional<User> user = this.activeUser.stream().filter(u -> playerName.equals(u.getName())).findFirst();
+            user.ifPresent(user1 -> {
+                this.wrapper.getPluginManager().onPlayerCompletedChallenge(user1, challengeName);
+            });
+        } else if(pureLine.matches("Done\\s\\(.*\\)!.*")){
+            String unparsedTime = pureLine.substring(pureLine.indexOf("(") + 1, pureLine.indexOf(")") - 1);
+            try{
+                int startupTimeInMilliseconds = Math.round(Float.parseFloat(unparsedTime) * 1000);
+                this.wrapper.getPluginManager().onServerStared(startupTimeInMilliseconds);
+            } catch(NumberFormatException ignored){}
+        } else if(pureLine.matches("Stopping\\sthe\\sserver")){
+            this.wrapper.getPluginManager().onServerStop();
+        } else if(pureLine.matches("Saving\\sthe\\sgame\\s.*")){
+            this.wrapper.getPluginManager().onServerSaving();
+        } else if(pureLine.matches("Saved\\sthe\\sgame")){
+            this.wrapper.getPluginManager().onServerSaved();
+        }
+        
+        redirectToConsole.lazySet(this.wrapper.getPluginManager().onServerMessage(pureLine));
+        
+        if(redirectToConsole.get()){
+            this.wrapper.getLog().info("Minecraft", pureLine);
         }
     }
     
     public void scheduleLine(String line){
         this.linesToRead.get().addLast(line);
+    }
+    
+    public List<User> getActiveUser(){
+        return Collections.unmodifiableList(this.activeUser);
     }
 }

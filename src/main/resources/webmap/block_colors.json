@@ -1,0 +1,134 @@
+{
+  "minecraft:air": {
+    "hex": "#000000",
+    "opacity": 0.0
+  },
+  "minecraft:cave_air": {
+    "hex": "#000000",
+    "opacity": 0.0
+  },
+  "minecraft:bedrock": "#FFFFFF",
+  "minecraft:stone": "#747474",
+  "minecraft:cobblestone": "#B7B7B7",
+  "minecraft:andesite": "#818085",
+  "minecraft:diorite": "#DBDBDB",
+  "minecraft:granite": "#916053",
+  "minecraft:terracotta": "#905A40",
+  "minecraft:sandstone": "#D6CBA0",
+  "minecraft:cut_sandstone": "#D6CBA0",
+  "minecraft:chiseled_sandstone": "#D6CBA0",
+  "minecraft:smooth_sandstone": "#D6CBA0",
+  "minecraft:red_sandstone": "#C06822",
+  "minecraft:cut_red_sandstone": "#C06822",
+  "minecraft:chiseled_red_sandstone": "#C06822",
+  "minecraft:smooth_red_sandstone": "#C06822",
+  "minecraft:dirt": "#8D6647",
+  "minecraft:coarse_dirt": "#5A3622",
+  "minecraft:podzol": "#391C05",
+  "minecraft:mycelium": "#785B65",
+  "minecraft:sand": "#A99F6C",
+  "minecraft:red_sand": "#9B4E1A",
+  "minecraft:gravel": "#6F6A61",
+  "minecraft:grass_block": "#49773D",
+  "minecraft:grass": {
+    "hex": "#456B3A",
+    "opacity": 0.5
+  },
+  "minecraft:farmland": "#422813",
+  "minecraft:grass_path": "#886D3C",
+  "minecraft:clay": "#9AA0AC",
+
+  "minecraft:oak_log": "#665231",
+  "minecraft:birch_log": "#DFDCD0",
+  "minecraft:spruce_log": "#312512",
+  "minecraft:jungle_log": "#63581C",
+  "minecraft:acacia_log": "#6C665C",
+  "minecraft:dark_oak_log": "#19120B",
+  "minecraft:oak_planks": "#B7935E",
+  "minecraft:birch_planks": "#CFC48A",
+  "minecraft:spruce_planks": "#7C5B34",
+  "minecraft:jungle_planks": "#9A6D48",
+  "minecraft:acacia_planks": "#B5653A",
+  "minecraft:dark_oak_planks": "#472E16",
+  "minecraft:oak_stairs": "#B7935E",
+  "minecraft:birch_stairs": "#CFC48A",
+  "minecraft:spruce_stairs": "#7C5B34",
+  "minecraft:jungle_stairs": "#9A6D48",
+  "minecraft:acacia_stairs": "#B5653A",
+  "minecraft:dark_oak_stairs": "#472E16",
+  "minecraft:oak_slabs": "#B7935E",
+  "minecraft:birch_slabs": "#CFC48A",
+  "minecraft:spruce_slabs": "#7C5B34",
+  "minecraft:jungle_slabs": "#9A6D48",
+  "minecraft:acacia_slabs": "#B5653A",
+  "minecraft:dark_oak_slabs": "#472E16",
+  "minecraft:oak_fence": "#B7935E",
+  "minecraft:birch_fence": "#CFC48A",
+  "minecraft:spruce_fence": "#7C5B34",
+  "minecraft:jungle_fence": "#9A6D48",
+  "minecraft:acacia_fence": "#B5653A",
+  "minecraft:dark_oak_fence": "#472E16",
+  "minecraft:oak_fence_gate": "#B7935E",
+  "minecraft:birch_fence_gate": "#CFC48A",
+  "minecraft:spruce_fence_gate": "#7C5B34",
+  "minecraft:jungle_fence_gate": "#9A6D48",
+  "minecraft:acacia_fence_gate": "#B5653A",
+  "minecraft:dark_oak_fence_gate": "#472E16",
+
+  "minecraft:oak_leaves": {
+    "hex": "#3A8A29",
+    "opacity": 0.5
+  },
+  "minecraft:birch_leaves": {
+    "hex": "#627F40",
+    "opacity": 0.5
+  },
+  "minecraft:spruce_leaves": {
+    "hex": "#548454",
+    "opacity": 0.5
+  },
+  "minecraft:jungle_leaves": {
+    "hex": "#3D9914",
+    "opacity": 0.5
+  },
+  "minecraft:acacia_leaves": {
+    "hex": "#2C6A0E",
+    "opacity": 0.5
+  },
+  "minecraft:dark_oak_leaves": {
+    "hex": "#3D9914",
+    "opacity": 0.5
+  },
+  "minecraft:water": {
+    "hex": "#2389DA",
+    "opacity": 0.5
+  },
+  "minecraft:lava": {
+    "hex": "#C34B0A",
+    "opacity": 0.8
+  },
+  "minecraft:snow": "#E7F7F7",
+  "minecraft:snow_block": "#E7F7F7",
+  "minecraft:ice": {
+    "hex": "#A8C5FB",
+    "opacity": 0.5
+  },
+  "minecraft:packed_ice": "#86AFF8",
+  "minecraft:blue_ice": "#3E5D93",
+  "minecraft:stone_bricks": "#7B7B7B",
+  "minecraft:brown_mushroom_block": "#946D52",
+  "minecraft:red_mushroom_block": "#C32826",
+  "minecraft:mushroom_stem": "#C2BCAC",
+  "minecraft:kelp": {
+    "hex": "#50712D",
+    "opacity": 0.5
+  },
+  "minecraft:kelp_plant": {
+    "hex": "#50712D",
+    "opacity": 0.5
+  },
+  "minecraft:lily_pad": {
+    "hex": "#0C4E18",
+    "opacity": 0.9
+  }
+}

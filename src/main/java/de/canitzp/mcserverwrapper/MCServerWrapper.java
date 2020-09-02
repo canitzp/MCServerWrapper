@@ -3,17 +3,14 @@ package de.canitzp.mcserverwrapper;
 import de.canitzp.mcserverwrapper.commands.CommandHandler;
 import de.canitzp.mcserverwrapper.ign.MinecraftConsoleReader;
 import de.canitzp.mcserverwrapper.ign.UserManagement;
-import de.canitzp.mcserverwrapper.ign.save.RegionLoader;
 import de.canitzp.mcserverwrapper.plugins.PluginManager;
 import de.canitzp.mcserverwrapper.tasks.ConsoleInterpreter;
 import de.canitzp.mcserverwrapper.tasks.BackupManager;
 import de.canitzp.mcserverwrapper.tasks.RunMinecraftTask;
 import de.canitzp.mcserverwrapper.tasks.RunMinecraftUpdate;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -42,16 +39,13 @@ public class MCServerWrapper{
     private Settings settings;
     
     public MCServerWrapper(boolean startInLockedMode){
-        
-        //new RegionLoader(new File("./server/world")).loadRegionFiles("");
-        
-        //System.exit(0);
         /*
         * Important configuration reading and writhing!
         */
         this.loadConfiguration(true);
     
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            this.getLog().info(LOG_NAME, "Stopping MCServerWrapper");
             if (this.RUN_MC_TASK.isRunning()) {
                 this.RUN_MC_TASK.sendToConsole("stop");
             }
@@ -79,8 +73,7 @@ public class MCServerWrapper{
             this.getLog().info(LOG_NAME, "Application started in LOCKED mode.");
         }
     
-        while(this.LOCK_APPLICATION.get() || THREADS.getActiveCount() != 0) {
-            //System.gc();
+        while(this.isLockMode() || THREADS.getActiveCount() != 0) {
             sleep(250L);
             try{
                 this.tick();
@@ -132,7 +125,7 @@ public class MCServerWrapper{
     }
     
     public void startMinecraftServer(){
-        if(this.LOCK_APPLICATION.get()){
+        if(this.isLockMode()){
             this.getLog().error(LOG_NAME, "Server won't be started in LOCKED mode!");
             return;
         }
@@ -161,28 +154,6 @@ public class MCServerWrapper{
         }catch(InterruptedException e){
             e.printStackTrace();
         }
-    }
-    
-    private void log(String caller, String message){
-        String log;
-        if(caller != null){
-            log = String.format("[%s]: %s", caller, message);
-        } else {
-            log = String.format("%s", message);
-        }
-        //LOG_LINES.add(log);
-        System.out.println(log);
-    }
-    
-    @Deprecated
-    public void game(String msg){
-        String caller = "Minecraft console";
-        this.log(caller, msg);
-    }
-    
-    @Deprecated
-    public void raw(String msg){
-        this.log(null, msg);
     }
     
     public Settings getSettings(){

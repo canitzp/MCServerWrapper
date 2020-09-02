@@ -74,8 +74,10 @@ public class RunMinecraftTask implements Runnable{
             lines.add("Directory:     '" + jarFile.getParentFile().getCanonicalPath() + File.separator + "'");
             lines.add("Command:       '" + String.join(" ", command) + "'");
             lines.add("=====================================");
-            
             this.wrapper.getLog().list(LOG_NAME, lines);
+            
+            this.wrapper.getPluginManager().onServerStart(command);
+            long startupTime = System.currentTimeMillis();
             
             Process p = new ProcessBuilder(command).directory(jarFile.getParentFile()).start();
             
@@ -99,6 +101,10 @@ public class RunMinecraftTask implements Runnable{
             this.processWriter.get().close();
             this.processWriter.set(null);
             
+            long serverUptime = System.currentTimeMillis() - startupTime;
+            
+            this.wrapper.getPluginManager().onServerStopped(serverUptime, p.exitValue());
+            
             // evaluate exit code
             if (p.exitValue() != 0) {
                 this.wrapper.getLog().error(LOG_NAME, "Minecraft server exited with an error! '" + p.exitValue() + "'");
@@ -108,15 +114,14 @@ public class RunMinecraftTask implements Runnable{
                     try(BufferedReader br = new BufferedReader(isr)){
                         while((line = br.readLine()) != null) {
                             this.wrapper.getLog().warn(LOG_NAME, line);
-                            // todo interpret commands from ingame
                         }
                     }
                 }
             } else {
                 this.wrapper.getLog().info(LOG_NAME, "Minecraft server exited fine.");
             }
-        } catch (IOException var5) {
-            var5.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
         
         this.isRunning.set(false);

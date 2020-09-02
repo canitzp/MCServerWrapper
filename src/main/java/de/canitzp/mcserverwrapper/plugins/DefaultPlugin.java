@@ -1,7 +1,10 @@
 package de.canitzp.mcserverwrapper.plugins;
 
+import com.mojang.brigadier.CommandDispatcher;
 import de.canitzp.mcserverwrapper.MCServerWrapper;
 import de.canitzp.mcserverwrapper.Settings;
+import de.canitzp.mcserverwrapper.commands.CommandHandler;
+import de.canitzp.mcserverwrapper.ign.User;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,4 +59,8 @@ public abstract class DefaultPlugin {
     protected abstract void init();
     
     protected abstract void stop();
+    
+    protected void registerCommand(CommandHandler commandHandler){}
+    
+    protected void registerCommand(CommandDispatcher<User> dispatcher){}
 }

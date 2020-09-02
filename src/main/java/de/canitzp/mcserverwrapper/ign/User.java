@@ -1,6 +1,7 @@
 package de.canitzp.mcserverwrapper.ign;
 
 import com.google.gson.*;
+import de.canitzp.mcserverwrapper.MCServerWrapper;
 
 import java.io.File;
 import java.io.FileReader;
@@ -14,11 +15,17 @@ import java.util.UUID;
 
 public class User{
     
-    public static final User CONSOLE = new User();
+    public static final User CONSOLE = new User(){
+        @Override
+        public boolean tellUser(MCServerWrapper wrapper, String message) {
+            wrapper.getLog().info("/tell", message);
+            return true;
+        }
+    };
     
     static{
         CONSOLE.uuid = new UUID(0, 0);
-        CONSOLE.name = "Console";
+        CONSOLE.name = "Server";
         CONSOLE.level = UserLevel.OWNER;
     }
     
@@ -46,6 +53,10 @@ public class User{
     
     public Date getExpiresOn(){
         return expiresOn;
+    }
+    
+    public boolean tellUser(MCServerWrapper wrapper, String message){
+        return wrapper.RUN_MC_TASK.sendToConsole(String.format("/tell %s %s", this.name, message));
     }
     
     public static List<User> readUserFromSystem(File usercache, File ops){

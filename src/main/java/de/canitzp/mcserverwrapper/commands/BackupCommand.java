@@ -8,7 +8,7 @@ import org.apache.commons.cli.Options;
 
 public class BackupCommand implements IWrapperCommand{
     
-    private Options options = new Options().addOption(new Option("s", "stop", false, ""));
+    private Options options = new Options().addOption(new Option("s", "stop", false, "")).addOption(new Option("r", "restore", true, ""));
     
     @Override
     public String[] triggerNames(){
@@ -22,7 +22,7 @@ public class BackupCommand implements IWrapperCommand{
     
     @Override
     public String helpDescription(){
-        return "Manual backup of all server files. Use --stop to stop the server before backup.";
+        return "Manual backup of all server files. Use --stop to stop the server before backup. Use --restore to restore a backup (A new backup is created before restoring from an old one)";
     }
     
     @Override
@@ -32,28 +32,39 @@ public class BackupCommand implements IWrapperCommand{
     
     @Override
     public boolean execute(MCServerWrapper wrapper, User user, CommandLine cmd){
-        boolean shouldStopServer = cmd != null && cmd.hasOption("stop");
-        if(shouldStopServer){
-            boolean wasRunning = wrapper.RUN_MC_TASK.isRunning();
-            if(wrapper.RUN_MC_TASK.stopServer()){
-                wrapper.getLog().info(CommandHandler.LOG_NAME, "Server stopped. Starting backup.");
+        boolean shouldRestore = cmd != null && cmd.hasOption("restore");
+        if(shouldRestore){
+            String restoreNumber = cmd.getOptionValue("restore");
+            // todo
+            if(restoreNumber != null){
+            
+            } else {
+            
+            }
+        } else {
+            boolean shouldStopServer = cmd != null && cmd.hasOption("stop");
+            if(shouldStopServer){
+                boolean wasRunning = wrapper.RUN_MC_TASK.isRunning();
+                if(wrapper.RUN_MC_TASK.stopServer()){
+                    wrapper.getLog().info(CommandHandler.LOG_NAME, "Server stopped. Starting backup.");
+                    if(wrapper.BACKUP_MANAGER.scheduleBackup("manual")){
+                        wrapper.BACKUP_MANAGER.waitForBackupFree();
+                        wrapper.getLog().info(CommandHandler.LOG_NAME, "Backup done.");
+                        if(wasRunning){
+                            wrapper.startMinecraftServer();
+                        }
+                    } else {
+                        wrapper.getLog().error(CommandHandler.LOG_NAME, "Backup hasn't finished!");
+                    }
+                }
+            } else {
+                wrapper.getLog().info(CommandHandler.LOG_NAME, "Live backup started.");
                 if(wrapper.BACKUP_MANAGER.scheduleBackup("manual")){
                     wrapper.BACKUP_MANAGER.waitForBackupFree();
                     wrapper.getLog().info(CommandHandler.LOG_NAME, "Backup done.");
-                    if(wasRunning){
-                        wrapper.startMinecraftServer();
-                    }
                 } else {
                     wrapper.getLog().error(CommandHandler.LOG_NAME, "Backup hasn't finished!");
                 }
-            }
-        } else {
-            wrapper.getLog().info(CommandHandler.LOG_NAME, "Live backup started.");
-            if(wrapper.BACKUP_MANAGER.scheduleBackup("manual")){
-                wrapper.BACKUP_MANAGER.waitForBackupFree();
-                wrapper.getLog().info(CommandHandler.LOG_NAME, "Backup done.");
-            } else {
-                wrapper.getLog().error(CommandHandler.LOG_NAME, "Backup hasn't finished!");
             }
         }
         return true;
