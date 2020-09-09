@@ -50,6 +50,8 @@ public class MinecraftConsoleReader {
                 User user = this.activeUser.stream().filter(u -> caller.equals(u.getName())).findFirst().orElse(null);
                 if(user == null && caller.equals("Server")){
                     user = User.CONSOLE;
+                } else {
+                    user = User.NULL;
                 }
                 if(message.startsWith(this.wrapper.getSettings().getString("general.wrapper_command_prefix"))){
                     this.wrapper.getCommandHandler().scheduleCommand(user, message);

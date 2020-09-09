@@ -18,6 +18,13 @@ import java.util.UUID;
 
 public class User {
     
+    public static final User NULL = new User() {
+        @Override
+        public boolean tellUser(MCServerWrapper wrapper, String message){
+            wrapper.getLog().info("/tell", message);
+            return true;
+        }
+    };
     public static final User CONSOLE = new User() {
         @Override
         public boolean tellUser(MCServerWrapper wrapper, String message){
@@ -32,6 +39,9 @@ public class User {
     private Date expiresOn;
 
     static{
+        NULL.uuid = new UUID(Long.MAX_VALUE, Long.MAX_VALUE);
+        NULL.name = "_";
+        NULL.level = UserLevel.OWNER;
         CONSOLE.uuid = new UUID(0, 0);
         CONSOLE.name = "Server";
         CONSOLE.level = UserLevel.OWNER;

@@ -66,6 +66,9 @@ public class DiscordChatBridge extends DefaultPlugin implements Runnable {
             }
         }));
         this.registerEvent(new ChatEvent((user, msg) -> {
+            if(user == null || user == User.NULL){
+                return true;
+            }
             if(lastMessage.get() != null && lastMessage.get().equals(msg)){
                 return true;
             }
