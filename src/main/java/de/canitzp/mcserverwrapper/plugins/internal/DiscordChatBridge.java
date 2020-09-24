@@ -66,10 +66,11 @@ public class DiscordChatBridge extends DefaultPlugin implements Runnable {
             }
         }));
         this.registerEvent(new ChatEvent((user, msg) -> {
+            System.out.println("Broadcast chat message on discord by user '" + user + "' and message: " + msg);
             if(user == null || user == User.NULL){
                 return true;
             }
-            if(lastMessage.get() != null && lastMessage.get().equals(msg)){
+            if(this.lastMessage.get() != null && this.lastMessage.get().equals(msg)){
                 return true;
             }
             for(long channelId : allowedChannel){
