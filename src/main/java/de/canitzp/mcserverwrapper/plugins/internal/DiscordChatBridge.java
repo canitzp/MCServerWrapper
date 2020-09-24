@@ -66,7 +66,6 @@ public class DiscordChatBridge extends DefaultPlugin implements Runnable {
             }
         }));
         this.registerEvent(new ChatEvent((user, msg) -> {
-            System.out.println("Broadcast chat message on discord by user '" + user + "' and message: " + msg);
             if(user == null || user == User.NULL){
                 return true;
             }

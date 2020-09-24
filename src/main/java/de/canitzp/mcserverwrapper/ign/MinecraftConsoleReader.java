@@ -49,11 +49,10 @@ public class MinecraftConsoleReader {
                 String caller = split[0].substring(1, split[0].length() - 1);
                 String message = split[1];
                 User user = this.activeUser.stream().filter(u -> caller.equals(u.getName())).findFirst().orElse(null);
-                if(user == null && caller.equals("Server")){
-                    user = User.CONSOLE;
-                } else {
-                    user = User.NULL;
+                if(user == null){
+                    user = caller.equals("Server") ? User.CONSOLE : User.NULL;
                 }
+                
                 if(message.startsWith(this.wrapper.getSettings().getString("general.wrapper_command_prefix"))){
                     this.wrapper.getCommandHandler().scheduleCommand(user, message);
                 }
