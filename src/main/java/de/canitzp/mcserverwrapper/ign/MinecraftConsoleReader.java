@@ -44,15 +44,15 @@ public class MinecraftConsoleReader {
         
         if(pureLine.matches("(\\[.*\\]|<.*>)\\s.*")){
             String[] split = pureLine.split("\\s", 2);
+            System.out.println(Arrays.toString(split));
             if(split.length == 2){
                 String caller = split[0].substring(1, split[0].length() - 1);
                 String message = split[1];
                 User user = this.activeUser.stream().filter(u -> caller.equals(u.getName())).findFirst().orElse(null);
-                if(user == null && caller.equals("Server")){
-                    user = User.CONSOLE;
-                } else {
-                    user = User.NULL;
+                if(user == null){
+                    user = caller.equals("Server") ? User.CONSOLE : User.NULL;
                 }
+                
                 if(message.startsWith(this.wrapper.getSettings().getString("general.wrapper_command_prefix"))){
                     this.wrapper.getCommandHandler().scheduleCommand(user, message);
                 }
@@ -61,11 +61,14 @@ public class MinecraftConsoleReader {
         } else if(pureLine.matches(".*\\sjoined\\sthe\\sgame")){
             String playerName = pureLine.substring(0, pureLine.indexOf(" "));
             List<User> allUser = User.readUserFromSystem(this.usercache, this.ops);
-            Optional<User> user = allUser.stream().filter(u -> playerName.equals(u.getName())).findFirst();
-            user.ifPresent(user1 -> {
-                this.activeUser.add(user1);
-                this.wrapper.getPluginManager().onPlayerJoin(user1);
-            });
+            allUser
+                .stream()
+                .filter(u -> playerName.equals(u.getName()))
+                .findFirst()
+                .ifPresent(user -> {
+                    this.activeUser.add(user);
+                    this.wrapper.getPluginManager().onPlayerJoin(user);
+                });
         } else if(pureLine.matches(".*\\sleft\\sthe\\sgame")){
             String playerName = pureLine.substring(0, pureLine.indexOf(" "));
             Optional<User> user = this.activeUser.stream().filter(u -> playerName.equals(u.getName())).findFirst();

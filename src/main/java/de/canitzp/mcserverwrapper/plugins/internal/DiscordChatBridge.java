@@ -69,7 +69,7 @@ public class DiscordChatBridge extends DefaultPlugin implements Runnable {
             if(user == null || user == User.NULL){
                 return true;
             }
-            if(lastMessage.get() != null && lastMessage.get().equals(msg)){
+            if(this.lastMessage.get() != null && this.lastMessage.get().equals(msg)){
                 return true;
             }
             for(long channelId : allowedChannel){

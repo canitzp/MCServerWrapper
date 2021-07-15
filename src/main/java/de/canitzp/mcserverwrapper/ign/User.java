@@ -97,7 +97,7 @@ public class User {
                                 }
                                 case "expiresOn":{
                                     try{
-                                        user.expiresOn = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss Z").parse(((JsonObject) e).get("expiresOn").getAsString()); // 2020-03-10 15:11:04 +0100
+                                        user.expiresOn = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z").parse(((JsonObject) e).get("expiresOn").getAsString()); // 2020-03-10 15:11:04 +0100
                                     } catch(ParseException ex){
                                         ex.printStackTrace();
                                     }
@@ -114,7 +114,7 @@ public class User {
         }
         
         // parse ops.json
-        try(FileReader fr = new FileReader(usercache)){
+        try(FileReader fr = new FileReader(ops)){
             JsonElement root = JsonParser.parseReader(fr);
             if(root instanceof JsonArray){
                 for(JsonElement e : ((JsonArray) root)){
