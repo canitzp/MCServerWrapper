@@ -44,7 +44,7 @@ public class WebMap extends DefaultPlugin {
         tilesFolder.mkdirs();
         this.registerEvent(new ServerEvents.Saved(this::reloadWorld));
         this.javalin = Javalin.create(javalinConfig -> {
-            javalinConfig.addStaticFiles("/webmap/public");
+            javalinConfig.addStaticFiles("/webmap/public", Location.CLASSPATH);
             javalinConfig.addStaticFiles(tilesFolder.getAbsolutePath(), Location.EXTERNAL);
         });
         this.javalin.start(this.pluginSettings.getInt("general.port"));
